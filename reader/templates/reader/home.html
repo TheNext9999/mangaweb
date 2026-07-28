@@ -1,0 +1,133 @@
+{% extends "reader/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<section class="hero">
+  <div class="hero-collage">
+    {% for column in hero_columns %}
+      <div class="collage-column">
+        <div class="collage-track">
+          {% for url in column %}
+            <div class="collage-cell"><img src="{{ url }}" alt="" loading="lazy"></div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <div class="hero-overlay"></div>
+
+  <div class="container hero-content">
+    <p class="hero-kicker">PHÂN TÍCH · DỮ LIỆU · CỘNG ĐỒNG</p>
+    <h1 class="hero-title">
+      Khám phá<br>
+      <span class="accent">tựa tiếp theo</span><br>
+      theo dõi
+    </h1>
+    <p class="hero-subtitle">
+      Điểm số, xu hướng và thống kê sâu cho Anime, Manga &amp; Light Novel — lấy dữ liệu trực tiếp từ MangaDex.
+    </p>
+    <div class="hero-actions">
+      <a href="#trending" class="btn btn-primary"><i class="fa-solid fa-wand-magic-sparkles"></i> Bắt đầu ngay <i class="fa-solid fa-arrow-right"></i></a>
+      <a href="{% url 'reader:search' %}" class="btn btn-ghost"><i class="fa-solid fa-magnifying-glass"></i> Tìm truyện</a>
+    </div>
+  </div>
+</section>
+
+{% if error %}
+  <div class="container">
+    <div class="error-box"><i class="fa-solid fa-triangle-exclamation"></i> {{ error }}</div>
+  </div>
+{% endif %}
+
+{% if popular_new %}
+<section class="container section" id="popular-new">
+  <h2 class="section-title reveal-up"><i class="fa-solid fa-sparkles"></i> Những tựa sách mới được yêu thích</h2>
+
+  <div class="popular-carousel reveal-up">
+    <div class="popular-viewport">
+      {% for m in popular_new %}
+        <div class="popular-slide {% if forloop.first %}active{% endif %}"
+             data-index="{{ forloop.counter0 }}"
+             data-author="{{ m.authors|join:', ' }}">
+          <a href="{% url 'reader:manga_detail' m.id %}" class="popular-cover">
+            {% if m.cover_url %}
+              <img src="{{ m.cover_url }}" alt="{{ m.title }}" loading="lazy">
+            {% else %}
+              <div class="no-cover">Không có bìa</div>
+            {% endif %}
+          </a>
+          <div class="popular-info">
+            <a href="{% url 'reader:manga_detail' m.id %}"><h3 class="popular-title">{{ m.title }}</h3></a>
+            {% if m.tags %}
+              <p class="popular-tags">
+                {% for tag in m.tags|slice:":4" %}<span class="popular-tag-pill">{{ tag.name }}</span>{% endfor %}
+              </p>
+            {% endif %}
+            <p class="popular-desc">{{ m.description|truncatewords:70|default:"Chưa có mô tả." }}</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="popular-footer">
+      <span class="popular-author"></span>
+      <div class="popular-nav">
+        <button type="button" class="popular-prev" aria-label="Truyện trước"><i class="fa-solid fa-chevron-left"></i></button>
+        <span class="popular-counter">Số <span class="popular-current">1</span></span>
+        <button type="button" class="popular-next" aria-label="Truyện sau"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="container section" id="trending">
+  <h2 class="section-title reveal-up"><i class="fa-solid fa-fire"></i> Thịnh hành</h2>
+  <div class="manga-grid">
+    {% for m in trending %}
+      <a href="{% url 'reader:manga_detail' m.id %}" class="manga-card reveal-up">
+        <div class="manga-cover">
+          {% if m.cover_url %}
+            <img src="{{ m.cover_url }}" alt="{{ m.title }}" loading="lazy">
+          {% else %}
+            <div class="no-cover">Không có bìa</div>
+          {% endif %}
+          <span class="manga-status status-{{ m.status }}">{{ m.status }}</span>
+        </div>
+        <h3 class="manga-title">{{ m.title }}</h3>
+        {% if m.tags %}
+          <p class="manga-tags">{% for tag in m.tags %}{{ tag.name }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+        {% endif %}
+      </a>
+    {% empty %}
+      {% if not error %}<p>Không tải được danh sách truyện.</p>{% endif %}
+    {% endfor %}
+  </div>
+</section>
+
+<section class="container section" id="latest">
+  <h2 class="section-title reveal-up"><i class="fa-solid fa-arrows-rotate"></i> Mới cập nhật</h2>
+  <div class="manga-grid">
+    {% for m in latest %}
+      <a href="{% url 'reader:manga_detail' m.id %}" class="manga-card reveal-up">
+        <div class="manga-cover">
+          {% if m.cover_url %}
+            <img src="{{ m.cover_url }}" alt="{{ m.title }}" loading="lazy">
+          {% else %}
+            <div class="no-cover">Không có bìa</div>
+          {% endif %}
+          <span class="manga-status status-{{ m.status }}">{{ m.status }}</span>
+        </div>
+        <h3 class="manga-title">{{ m.title }}</h3>
+        {% if m.tags %}
+          <p class="manga-tags">{% for tag in m.tags %}{{ tag.name }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+        {% endif %}
+      </a>
+    {% empty %}
+      {% if not error %}<p>Không tải được danh sách truyện.</p>{% endif %}
+    {% endfor %}
+  </div>
+</section>
+
+{% endblock %}

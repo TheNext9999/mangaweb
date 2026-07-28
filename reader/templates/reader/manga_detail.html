@@ -1,0 +1,295 @@
+{% extends "reader/base.html" %}
+{% block title %}{{ manga.title|default:"Truyện" }} — MangaVerse{% endblock %}
+{% block content %}
+
+{% if error %}
+  <div class="container"><div class="error-box"><i class="fa-solid fa-triangle-exclamation"></i> {{ error }}</div></div>
+{% endif %}
+
+{% if manga %}
+<section class="manga-hero">
+  <div class="manga-hero-bg" style="background-image: url('{{ manga.cover_url }}');"></div>
+  <div class="manga-hero-overlay"></div>
+  <div class="container manga-hero-content">
+    <div class="manga-hero-cover reveal-up in-view">
+      {% if manga.cover_url %}
+        <img src="{{ manga.cover_url }}" alt="{{ manga.title }}">
+      {% endif %}
+    </div>
+    <div class="manga-hero-info reveal-up in-view">
+      <h1>{{ manga.title }}</h1>
+      {% if manga.authors %}<p class="manga-authors"><i class="fa-solid fa-pen-nib"></i> {{ manga.authors|join:", " }}</p>{% endif %}
+      {% load reader_extras %}
+      {% if manga.stats %}
+        <div class="manga-stats-row">
+          <span class="manga-stat"><i class="fa-solid fa-star"></i> {% if manga.stats.bayesian %}{{ manga.stats.bayesian|floatformat:2 }}{% else %}N/A{% endif %}</span>
+          <span class="manga-stat"><i class="fa-solid fa-users"></i> {{ manga.stats.follows|format_count }}</span>
+          <span class="manga-stat"><i class="fa-regular fa-comment"></i> {{ manga.stats.comments|format_count }}</span>
+        </div>
+        {% if manga.stats.rating_breakdown %}
+          <details class="rating-breakdown">
+            <summary>Xem phân bố điểm đánh giá</summary>
+            <div class="rating-bars">
+              {% for r in manga.stats.rating_breakdown %}
+                <div class="rating-bar-row">
+                  <span class="rating-bar-score">{{ r.score }}</span>
+                  <div class="rating-bar-track"><div class="rating-bar-fill" style="width: {{ r.percent }}%;"></div></div>
+                  <span class="rating-bar-count">({{ r.count }})</span>
+                </div>
+              {% endfor %}
+            </div>
+          </details>
+        {% endif %}
+      {% endif %}
+
+      <p class="manga-meta">
+        <span class="pill status-{{ manga.status }}">{{ manga.status }}</span>
+        {% if manga.year %}<span class="pill">{{ manga.year }}</span>{% endif %}
+      </p>
+      {% if manga.tags %}
+        <p class="manga-tags">
+          {% for tag in manga.tags %}<a href="{% url 'reader:genre_detail' tag.id %}" class="tag-link">{{ tag.name }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}
+        </p>
+      {% endif %}
+
+      <div class="manga-info-rows">
+        <div class="info-row">
+          <span class="info-label">Ngôn ngữ gốc</span>
+          <span class="info-value"><span class="info-dot"></span> {{ manga.origin_language_name }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Nội dung</span>
+          <span class="info-value">{{ manga.content_rating_label }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Nguồn</span>
+          <span class="info-value">
+            {% for src in manga.source_links %}<a href="{{ src.url }}" target="_blank" rel="noopener" class="source-link">{{ src.name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+          </span>
+        </div>
+      </div>
+
+      {% if manga.alt_titles %}
+        <details class="alt-titles-block">
+          <summary>Tên khác ({{ manga.alt_titles|length }}) <i class="fa-solid fa-chevron-down"></i></summary>
+          <ul class="alt-titles-list">
+            {% for t in manga.alt_titles %}
+              <li><span class="fi fi-{{ t.flag }}"></span> {{ t.title }}</li>
+            {% endfor %}
+          </ul>
+        </details>
+      {% endif %}
+
+      <p class="manga-description">{{ manga.description|truncatewords:80 }}</p>
+      <div class="hero-actions">
+        {% if continue_reading %}
+          <a href="{% url 'reader:chapter_read' manga.id continue_reading.chapter_id %}" class="btn btn-primary">
+            <i class="fa-solid fa-play"></i> Tiếp tục đọc — Chương {{ continue_reading.chapter_number }}
+          </a>
+          {% if chapters %}
+            <a href="{% url 'reader:chapter_read' manga.id chapters.0.id %}" class="btn btn-ghost">Đọc từ đầu</a>
+          {% endif %}
+        {% elif chapters %}
+          <a href="{% url 'reader:chapter_read' manga.id chapters.0.id %}" class="btn btn-primary"><i class="fa-solid fa-play"></i> Đọc từ chương {{ chapters.0.chapter }}</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+          <form method="post" action="{% url 'reader:toggle_bookmark' manga.id 'follow' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn {% if is_following %}btn-primary{% else %}btn-ghost{% endif %}">
+              {% if is_following %}<i class="fa-solid fa-check"></i> Đang theo dõi{% else %}<i class="fa-solid fa-plus"></i> Theo dõi{% endif %}
+            </button>
+          </form>
+          <form method="post" action="{% url 'reader:toggle_bookmark' manga.id 'favorite' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn {% if is_favorited %}btn-primary{% else %}btn-ghost{% endif %}">
+              {% if is_favorited %}<i class="fa-solid fa-heart"></i> Đã yêu thích{% else %}<i class="fa-regular fa-heart"></i> Yêu thích{% endif %}
+            </button>
+          </form>
+        {% else %}
+          <a href="{% url 'account_login' %}?next={{ request.path }}" class="btn btn-ghost"><i class="fa-solid fa-plus"></i> Theo dõi / Yêu thích</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% load reader_extras %}
+<section class="container section" id="chapter-list">
+
+  <div class="detail-tabs reveal-up in-view">
+    <button type="button" class="detail-tab active" data-tab="chapters">Chương</button>
+    <button type="button" class="detail-tab" data-tab="comments">Bình luận{% if manga.stats.comments %} ({{ manga.stats.comments }}){% endif %}</button>
+    <button type="button" class="detail-tab" data-tab="art">Tranh vẽ</button>
+    <button type="button" class="detail-tab" data-tab="recommend">Đề xuất</button>
+  </div>
+
+  <div class="detail-tab-panel" data-panel="chapters">
+    <div class="chapter-list-header reveal-up">
+      <h2 class="section-title" style="margin:0;"><i class="fa-solid fa-list-ul"></i> Danh sách chương ({{ chapter_groups|length }})</h2>
+      <div class="chapter-toolbar-actions">
+        {% if user.is_authenticated %}
+          <button type="button" class="sort-toggle-btn" id="markAllReadBtn" data-mark-url="{% url 'reader:mark_chapters_read' manga.id %}">
+            <i class="fa-solid fa-check-double"></i> Đánh dấu tất cả trên trang đã đọc
+          </button>
+        {% endif %}
+        <button type="button" class="sort-toggle-btn" id="chapterIndexToggle">
+          <i class="fa-solid fa-table-cells"></i> Mục lục
+        </button>
+        {% if chapter_groups %}
+          <button type="button" class="sort-toggle-btn" id="chapterSortToggle">
+            <i class="fa-solid fa-arrow-down-9-1"></i> <span id="chapterSortLabel">Descending</span>
+          </button>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="index-modal-overlay" id="indexModalOverlay">
+      <div class="index-modal">
+        <div class="index-modal-header">
+          <h3>Mục lục</h3>
+          <button type="button" class="index-modal-close" id="indexModalClose" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p class="index-modal-note">Mục lục bỏ qua bộ lọc chặn người dùng/nhóm dịch/ngôn ngữ.</p>
+
+        <div class="index-jump-row">
+          <div class="index-jump-field">
+            <label>Chương</label>
+            <div class="index-stepper">
+              <button type="button" class="index-stepper-btn" data-step="chapter" data-dir="-1">−</button>
+              <input type="text" id="indexChapterValue" value="0" readonly>
+              <button type="button" class="index-stepper-btn" data-step="chapter" data-dir="1">+</button>
+            </div>
+          </div>
+          <div class="index-jump-field">
+            <label>Tập</label>
+            <div class="index-stepper">
+              <button type="button" class="index-stepper-btn" data-step="volume" data-dir="-1">−</button>
+              <input type="text" id="indexVolumeValue" value="0" readonly>
+              <button type="button" class="index-stepper-btn" data-step="volume" data-dir="1">+</button>
+            </div>
+          </div>
+          <button type="button" class="index-clear-btn" id="indexClearBtn">Xoá</button>
+        </div>
+
+        <div class="index-volume-list">
+          {% for v in volume_index %}
+            <div class="index-volume-row" data-volume-number="{{ forloop.counter }}">
+              <button type="button" class="index-volume-toggle">
+                <span class="index-volume-label">{{ v.label }}</span>
+                <span class="index-volume-range">Chương {{ v.start }} - {{ v.end }} ({{ v.count }}) <i class="fa-solid fa-chevron-down"></i></span>
+              </button>
+              <div class="index-volume-chapters" hidden>
+                {% for cg in v.chapter_groups %}
+                  <div class="index-chapter-row" data-chapter-number="{{ cg.chapter }}">
+                    <button type="button" class="index-chapter-toggle">
+                      <span class="index-chapter-label">Chương {{ cg.chapter }}</span>
+                      <span class="index-chapter-count">{{ cg.entries|length }} <i class="fa-solid fa-chevron-down"></i></span>
+                    </button>
+                    <div class="index-chapter-entries" hidden>
+                      {% for c in cg.entries %}
+                        <a href="{% url 'reader:chapter_read' manga.id c.id %}" class="chapter-entry-row index-entry-row {% if c.id in read_chapter_ids %}is-read{% endif %}">
+                          <span class="chapter-entry-eye">
+                            {% if c.id in read_chapter_ids %}<i class="fa-solid fa-eye"></i>{% else %}<i class="fa-solid fa-eye-slash"></i>{% endif %}
+                          </span>
+                          <span class="chapter-entry-flag fi fi-{{ c.flag }}" title="{{ c.language }}"></span>
+                          <span class="chapter-entry-main">
+                            <span class="chapter-entry-title">
+                              Ch. {{ cg.chapter }}{% if c.title %} – {{ c.title }}{% endif %}
+                            </span>
+                            <span class="chapter-entry-group"><i class="fa-solid fa-users"></i> {{ c.group }}</span>
+                          </span>
+                          <span class="chapter-entry-time"><i class="fa-regular fa-clock"></i> {% if c.publish_at %}{{ c.publish_at|short_timesince }}{% else %}—{% endif %}</span>
+                          <span class="chapter-entry-views"><i class="fa-regular fa-eye"></i> N/A</span>
+                          <span class="chapter-entry-comments"><i class="fa-regular fa-comment"></i> {% if c.comments != None %}{{ c.comments }}{% else %}0{% endif %}</span>
+                        </a>
+                      {% endfor %}
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% empty %}
+            <p class="tab-placeholder-note">Chưa có dữ liệu chương.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="chapter-groups" id="chapterGroupsContainer">
+      {% for group in chapter_groups reversed %}
+        <details class="chapter-group-block reveal-up" open>
+          <summary class="chapter-group-header">
+            <span class="chapter-group-eye">
+              {% if group.all_read %}<i class="fa-solid fa-eye"></i>{% elif group.any_read %}<i class="fa-solid fa-eye chapter-group-eye-partial"></i>{% else %}<i class="fa-solid fa-eye-slash"></i>{% endif %}
+            </span>
+            <span class="chapter-group-name">Chương {{ group.chapter }}</span>
+            <span class="chapter-group-caret"><i class="fa-solid fa-chevron-down"></i></span>
+          </summary>
+          <div class="chapter-group-entries">
+            {% for c in group.entries %}
+              <a href="{% url 'reader:chapter_read' manga.id c.id %}" class="chapter-entry-row {% if c.id in read_chapter_ids %}is-read{% endif %}" data-chapter-id="{{ c.id }}">
+                <span class="chapter-entry-eye">
+                  {% if c.id in read_chapter_ids %}<i class="fa-solid fa-eye"></i>{% else %}<i class="fa-solid fa-eye-slash"></i>{% endif %}
+                </span>
+                <span class="chapter-entry-flag fi fi-{{ c.flag }}" title="{{ c.language }}"></span>
+                <span class="chapter-entry-main">
+                  <span class="chapter-entry-title">
+                    {% if c.title %}{{ c.title }}{% else %}Chương {{ group.chapter }}{% endif %}
+                  </span>
+                  <span class="chapter-entry-group">{{ c.group }}</span>
+                </span>
+                <span class="chapter-entry-time"><i class="fa-regular fa-clock"></i> {% if c.publish_at %}{{ c.publish_at|short_timesince }}{% else %}—{% endif %}</span>
+                <span class="chapter-entry-comments"><i class="fa-regular fa-comment"></i> {% if c.comments != None %}{{ c.comments }}{% else %}0{% endif %}</span>
+              </a>
+            {% endfor %}
+          </div>
+        </details>
+      {% empty %}
+        <p>Chưa có chương nào cho truyện này.</p>
+      {% endfor %}
+    </div>
+
+    <p class="chapter-shown-count" id="chapterShownCount"></p>
+    <nav class="pagination" id="chapterPagination" aria-label="Phân trang chương"></nav>
+  </div>
+
+  <div class="detail-tab-panel" data-panel="comments" hidden>
+    <div class="tab-placeholder">
+      {% if manga.stats.comments %}
+        <p><i class="fa-regular fa-comment"></i> Có <strong>{{ manga.stats.comments }}</strong> bình luận cho truyện này trên MangaDex.</p>
+      {% else %}
+        <p>Chưa có bình luận nào được ghi nhận.</p>
+      {% endif %}
+      <p class="tab-placeholder-note">MangaVerse chưa hỗ trợ hiển thị nội dung bình luận trực tiếp — bạn có thể xem và tham gia bình luận trên trang gốc.</p>
+      <a href="https://mangadex.org/title/{{ manga.id }}" target="_blank" rel="noopener" class="btn btn-ghost"><i class="fa-solid fa-arrow-up-right-from-square"></i> Xem bình luận trên MangaDex</a>
+    </div>
+  </div>
+
+  <div class="detail-tab-panel" data-panel="art" hidden>
+    <div class="tab-placeholder">
+      <p>MangaVerse chưa hỗ trợ hiển thị tranh vẽ người hâm mộ (MangaDex không công khai dữ liệu này qua API).</p>
+      <a href="https://mangadex.org/title/{{ manga.id }}" target="_blank" rel="noopener" class="btn btn-ghost"><i class="fa-solid fa-arrow-up-right-from-square"></i> Xem trên MangaDex</a>
+    </div>
+  </div>
+
+  <div class="detail-tab-panel" data-panel="recommend" hidden>
+    {% if recommendations %}
+      <div class="manga-grid">
+        {% for m in recommendations %}
+          <a href="{% url 'reader:manga_detail' m.id %}" class="manga-card">
+            <div class="manga-cover">
+              {% if m.cover_url %}<img src="{{ m.cover_url }}" alt="{{ m.title }}" loading="lazy">{% else %}<div class="no-cover">Không có bìa</div>{% endif %}
+            </div>
+            <h3 class="manga-title">{{ m.title }}</h3>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="tab-placeholder-note">Chưa tìm được gợi ý phù hợp cho truyện này.</p>
+    {% endif %}
+  </div>
+
+</section>
+{% endif %}
+
+{% endblock %}

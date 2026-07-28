@@ -1,0 +1,30 @@
+{% extends "reader/base.html" %}
+{% block title %}{{ title }} — MangaVerse{% endblock %}
+{% block content %}
+<section class="container section">
+  <h1 class="section-title reveal-up in-view">{{ title }}</h1>
+
+  {% if error %}<div class="error-box"><i class="fa-solid fa-triangle-exclamation"></i> {{ error }}</div>{% endif %}
+
+  <div class="manga-grid">
+    {% for m in results %}
+      <a href="{% url 'reader:manga_detail' m.id %}" class="manga-card reveal-up">
+        <div class="manga-cover">
+          {% if m.cover_url %}
+            <img src="{{ m.cover_url }}" alt="{{ m.title }}" loading="lazy">
+          {% else %}
+            <div class="no-cover">Không có bìa</div>
+          {% endif %}
+          <span class="manga-status status-{{ m.status }}">{{ m.status }}</span>
+        </div>
+        <h3 class="manga-title">{{ m.title }}</h3>
+        {% if m.tags %}<p class="manga-tags">{% for tag in m.tags %}{{ tag.name }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+      </a>
+    {% empty %}
+      {% if not error %}<p>Không có truyện nào.</p>{% endif %}
+    {% endfor %}
+  </div>
+
+  {% include "reader/_pagination.html" with pagination_query_prefix="" %}
+</section>
+{% endblock %}

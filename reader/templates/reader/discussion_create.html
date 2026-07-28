@@ -1,0 +1,15 @@
+{% extends "reader/base.html" %}
+{% block title %}Tạo nhóm thảo luận — MangaVerse{% endblock %}
+{% block content %}
+<section class="container section auth-section">
+  <div class="auth-card reveal-up in-view">
+    <h1 class="section-title"><i class="fa-solid fa-comments"></i> Tạo nhóm thảo luận</h1>
+    <form method="post" class="auth-form">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary auth-submit"><i class="fa-solid fa-check"></i> Tạo nhóm</button>
+    </form>
+    <p class="auth-switch"><a href="{% url 'reader:discussion_list' %}">← Quay lại danh sách nhóm</a></p>
+  </div>
+</section>
+{% endblock %}

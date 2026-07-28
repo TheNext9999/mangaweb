@@ -1,0 +1,264 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+  (function () {
+    try {
+      if (localStorage.getItem("mangaverse-theme") === "light") {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    } catch (e) { /* localStorage unavailable — default dark theme applies */ }
+  })();
+</script>
+<title>{% block title %}MangaVerse — Đọc truyện tranh online{% endblock %}</title>
+<link rel="icon" type="image/x-icon" href="{% static 'reader/img/favicon.ico' %}">
+<link rel="icon" type="image/png" sizes="32x32" href="{% static 'reader/img/favicon-32.png' %}">
+<link rel="apple-touch-icon" href="{% static 'reader/img/apple-touch-icon.png' %}">
+<link rel="stylesheet" href="{% static 'reader/css/style.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="{% url 'reader:home' %}" class="brand">
+      <img src="{% static 'reader/img/logo.png' %}" alt="MangaVerse" class="brand-logo">
+    </a>
+    <div class="search-wrap">
+      <form class="search-form" action="{% url 'reader:search' %}" method="get">
+        <input type="text" name="q" id="desktopSearchInput" data-suggest-url="{% url 'reader:search_suggest' %}" placeholder="Tìm truyện..." value="{{ query|default:'' }}" autocomplete="off">
+        <button type="submit" aria-label="Tìm kiếm"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </form>
+      <div class="search-suggest" id="desktopSearchSuggest"></div>
+    </div>
+
+    <div class="nav-right">
+    {% if user.is_authenticated %}
+      <div class="notif-menu">
+        <button type="button" class="theme-toggle-btn notif-trigger" aria-label="Thông báo">
+          <i class="fa-solid fa-bell"></i>
+          {% if unread_notif_count > 0 %}<span class="notif-badge">{{ unread_notif_count }}</span>{% endif %}
+        </button>
+        <div class="account-dropdown notif-dropdown">
+          <div class="notif-dropdown-header">
+            <span>Thông báo</span>
+            {% if unread_notif_count > 0 %}
+              <form method="post" action="{% url 'reader:notifications_mark_all_read' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="notif-mark-all">Đánh dấu đã đọc</button>
+              </form>
+            {% endif %}
+          </div>
+          {% for n in recent_notifications %}
+            <a href="{% url 'reader:notification_open' n.pk %}" class="notif-item {% if not n.is_read %}unread{% endif %}">
+              {% if n.cover_url %}<img src="{{ n.cover_url }}" alt="" class="notif-thumb">{% endif %}
+              <span class="notif-text">
+                <span class="notif-title">
+                  {% if n.flag %}<span class="fi fi-{{ n.flag }} notif-flag"></span>{% endif %}
+                  {{ n.manga_title }}
+                </span>
+                <span class="notif-sub">Chương mới: {{ n.chapter_number }}</span>
+              </span>
+            </a>
+          {% empty %}
+            <p class="notif-empty">Chưa có thông báo nào. Theo dõi truyện để nhận tin chương mới.</p>
+          {% endfor %}
+          <a href="{% url 'reader:notifications' %}" class="notif-see-all">Xem tất cả thông báo</a>
+        </div>
+      </div>
+    {% endif %}
+    <button type="button" class="theme-toggle-btn" data-theme-toggle aria-label="Chuyển giao diện sáng/tối" title="Chuyển giao diện sáng/tối"><i class="fa-solid fa-moon"></i></button>
+    <div class="settings-menu">
+      <button class="account-trigger" type="button"><i class="fa-solid fa-gear"></i> Cài đặt</button>
+      <div class="account-dropdown settings-dropdown">
+        <form method="post" action="{% url 'reader:save_settings' %}" class="settings-form">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+          <label class="settings-label"><i class="fa-solid fa-earth-asia"></i> Quốc gia truyện gốc</label>
+          <select name="origin_country" id="origin_country" onchange="this.form.submit()">
+            {% for c in origin_countries %}
+              <option value="{{ c.code }}" {% if c.code == current_origin_country %}selected{% endif %}>{{ c.label }}</option>
+            {% endfor %}
+          </select>
+
+          <label class="settings-label"><i class="fa-solid fa-book-open-reader"></i> Kích thước trang đọc</label>
+          <select name="reader_page_size" id="reader_page_size" onchange="this.form.submit()">
+            {% for p in page_size_options %}
+              <option value="{{ p.code }}" {% if p.code == current_reader_page_size %}selected{% endif %}>{{ p.label }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
+    </div>
+
+    <div class="account-menu">
+      {% if user.is_authenticated %}
+        <button class="account-trigger" type="button">
+          <span class="account-avatar">{{ user.username|first|upper }}</span>
+          {{ user.username }} <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="account-dropdown">
+          <a href="{% url 'reader:profile' %}"><i class="fa-solid fa-user"></i> Hồ sơ</a>
+          <a href="{% url 'reader:following' %}"><i class="fa-solid fa-bookmark"></i> Theo dõi</a>
+          <a href="{% url 'reader:favorites' %}"><i class="fa-solid fa-heart"></i> Yêu thích</a>
+          <a href="{% url 'reader:history' %}"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử</a>
+          <hr>
+          <a href="{% url 'account_logout' %}"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+        </div>
+      {% else %}
+        <button class="account-trigger" type="button"><i class="fa-solid fa-user"></i> Tài khoản <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="account-dropdown">
+          <a href="{% url 'account_login' %}"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</a>
+          <a href="{% url 'account_signup' %}"><i class="fa-solid fa-user-plus"></i> Đăng ký</a>
+          <hr>
+          <a href="{% url 'reader:hot' %}"><i class="fa-solid fa-fire"></i> Hot</a>
+          <a href="https://github.com" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> GitHub</a>
+        </div>
+      {% endif %}
+    </div>
+    </div>
+
+    <!-- Mobile-only: condensed icon actions, replaces the full nav above -->
+    <div class="mobile-header-actions">
+      {% if user.is_authenticated %}
+        <a href="{% url 'reader:notifications' %}" class="mobile-icon-btn notif-mobile-btn" aria-label="Thông báo">
+          <i class="fa-solid fa-bell"></i>
+          {% if unread_notif_count > 0 %}<span class="notif-badge">{{ unread_notif_count }}</span>{% endif %}
+        </a>
+      {% endif %}
+      <a href="{% url 'reader:search' %}" class="mobile-icon-btn" aria-label="Tìm truyện"><i class="fa-solid fa-magnifying-glass"></i></a>
+      <button type="button" class="mobile-icon-btn" id="mobileMenuToggle" aria-label="Mở menu" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
+    </div>
+  </div>
+
+  <nav class="sub-nav">
+    <div class="container sub-nav-inner">
+      <a href="{% url 'reader:home' %}"><i class="fa-solid fa-house"></i> Trang chủ</a>
+      <a href="{% url 'reader:following' %}">Theo dõi</a>
+      <a href="{% url 'reader:hot' %}">Hot</a>
+      <a href="{% url 'reader:favorites' %}">Yêu thích</a>
+      <a href="{% url 'reader:home' %}#latest">Mới cập nhật</a>
+      <a href="{% url 'reader:history' %}">Lịch sử</a>
+      <a href="{% url 'reader:discussion_list' %}">Thảo luận</a>
+
+      <div class="genre-menu">
+        <button type="button" class="genre-trigger">Thể loại <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="genre-dropdown">
+          {% for tag in nav_genres %}
+            <a href="{% url 'reader:genre_detail' tag.id %}">{{ tag.name }}</a>
+          {% endfor %}
+          <a href="{% url 'reader:genre_list' %}" class="genre-see-all">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <a href="{% url 'reader:search' %}">Tìm truyện</a>
+      <a href="{% url 'reader:advanced_search' %}">Nâng cao</a>
+      <a href="https://docln.sbs/" target="_blank" rel="noopener">Light Novel</a>
+    </div>
+  </nav>
+
+  <!-- Mobile-only: slide-down drawer opened by the hamburger button -->
+  <div class="mobile-menu" id="mobileMenu">
+    <div class="container mobile-menu-inner">
+      <div class="search-wrap">
+        <form class="mobile-search-form" action="{% url 'reader:search' %}" method="get">
+          <input type="text" name="q" id="mobileSearchInput" data-suggest-url="{% url 'reader:search_suggest' %}" placeholder="Tìm truyện..." value="{{ query|default:'' }}" autocomplete="off">
+          <button type="submit" aria-label="Tìm kiếm"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </form>
+        <div class="search-suggest" id="mobileSearchSuggest"></div>
+      </div>
+
+      <nav class="mobile-menu-links">
+        <a href="{% url 'reader:home' %}"><i class="fa-solid fa-house"></i> Trang chủ</a>
+        <a href="{% url 'reader:following' %}"><i class="fa-solid fa-bookmark"></i> Theo dõi</a>
+        <a href="{% url 'reader:hot' %}"><i class="fa-solid fa-fire"></i> Hot</a>
+        <a href="{% url 'reader:favorites' %}"><i class="fa-solid fa-heart"></i> Yêu thích</a>
+        <a href="{% url 'reader:home' %}#latest"><i class="fa-solid fa-arrows-rotate"></i> Mới cập nhật</a>
+        <a href="{% url 'reader:history' %}"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử</a>
+        <a href="{% url 'reader:discussion_list' %}"><i class="fa-solid fa-comments"></i> Thảo luận</a>
+        <a href="{% url 'reader:genre_list' %}"><i class="fa-solid fa-layer-group"></i> Thể loại</a>
+        <a href="{% url 'reader:advanced_search' %}"><i class="fa-solid fa-sliders"></i> Tìm kiếm nâng cao</a>
+        <a href="https://docln.sbs/" target="_blank" rel="noopener"><i class="fa-solid fa-book"></i> Light Novel</a>
+      </nav>
+
+      <div class="mobile-menu-divider"></div>
+
+      <div class="mobile-menu-account">
+        {% if user.is_authenticated %}
+          <a href="{% url 'reader:notifications' %}">
+            <i class="fa-solid fa-bell"></i> Thông báo
+            {% if unread_notif_count > 0 %}<span class="notif-badge notif-badge-inline">{{ unread_notif_count }}</span>{% endif %}
+          </a>
+          <a href="{% url 'reader:profile' %}"><i class="fa-solid fa-user"></i> Hồ sơ ({{ user.username }})</a>
+          <a href="{% url 'account_logout' %}"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+        {% else %}
+          <a href="{% url 'account_login' %}"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</a>
+          <a href="{% url 'account_signup' %}"><i class="fa-solid fa-user-plus"></i> Đăng ký</a>
+        {% endif %}
+        <button type="button" class="mobile-menu-theme-btn" data-theme-toggle><i class="fa-solid fa-moon"></i> Đổi giao diện sáng/tối</button>
+      </div>
+
+      <div class="mobile-menu-divider"></div>
+
+      <form method="post" action="{% url 'reader:save_settings' %}" class="settings-form mobile-settings-form">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <label class="settings-label"><i class="fa-solid fa-earth-asia"></i> Quốc gia truyện gốc</label>
+        <select name="origin_country" id="mobile_origin_country" onchange="this.form.submit()">
+          {% for c in origin_countries %}
+            <option value="{{ c.code }}" {% if c.code == current_origin_country %}selected{% endif %}>{{ c.label }}</option>
+          {% endfor %}
+        </select>
+        <label class="settings-label"><i class="fa-solid fa-book-open-reader"></i> Kích thước trang đọc</label>
+        <select name="reader_page_size" id="mobile_reader_page_size" onchange="this.form.submit()">
+          {% for p in page_size_options %}
+            <option value="{{ p.code }}" {% if p.code == current_reader_page_size %}selected{% endif %}>{{ p.label }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+  </div>
+</header>
+
+<div class="site-notice" id="siteNotice">
+  <div class="container site-notice-inner">
+    <span class="site-notice-text">
+      <i class="fa-solid fa-circle-info"></i>
+      Nếu không thể truy cập trang web, xin vui lòng sử dụng DNS
+      <a href="https://one.one.one.one/" target="_blank" rel="noopener">1.1.1.1</a>
+      hoặc thay đổi VPN để truy cập trang.
+    </span>
+    <button type="button" class="site-notice-close" id="siteNoticeClose" aria-label="Đóng thông báo">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+</div>
+
+<main>
+  {% if messages %}
+    <div class="container">
+      {% for message in messages %}
+        <div class="flash-message">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>Dữ liệu truyện được cung cấp bởi <a href="https://mangadex.org" target="_blank" rel="noopener">MangaDex API</a>. Vui lòng ủng hộ các nhóm dịch (scanlation groups) gốc.</p>
+  </div>
+</footer>
+
+<script src="{% static 'reader/js/main.js' %}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

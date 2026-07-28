@@ -1,0 +1,24 @@
+{% extends "reader/base.html" %}
+{% block title %}{{ title }} — MangaVerse{% endblock %}
+{% block content %}
+<section class="container section">
+  <h1 class="section-title reveal-up in-view">{{ title }}</h1>
+
+  <div class="manga-grid">
+    {% for b in items %}
+      <a href="{% url 'reader:manga_detail' b.manga_id %}" class="manga-card reveal-up">
+        <div class="manga-cover">
+          {% if b.cover_url %}
+            <img src="{{ b.cover_url }}" alt="{{ b.manga_title }}" loading="lazy">
+          {% else %}
+            <div class="no-cover">Không có bìa</div>
+          {% endif %}
+        </div>
+        <h3 class="manga-title">{{ b.manga_title }}</h3>
+      </a>
+    {% empty %}
+      <p>Chưa có truyện nào ở đây. Vào một trang truyện và bấm nút theo dõi / yêu thích để thêm.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

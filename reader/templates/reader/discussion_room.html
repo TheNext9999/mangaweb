@@ -1,0 +1,59 @@
+{% extends "reader/base.html" %}
+{% block title %}{{ group.name }} — Thảo luận — MangaVerse{% endblock %}
+{% block content %}
+<section class="container section chat-section">
+  <div class="chapter-list-header reveal-up in-view">
+    <div>
+      <h1 class="section-title" style="margin:0 0 4px;"><i class="fa-solid fa-comments"></i> {{ group.name }}</h1>
+      {% if group.description %}<p class="chat-room-desc">{{ group.description }}</p>{% endif %}
+    </div>
+    <span class="chat-member-count"><i class="fa-solid fa-users"></i> {{ member_count }} thành viên</span>
+  </div>
+
+  {% if tag %}
+    <div class="flash-message">
+      Đang lọc theo <strong>#{{ tag }}</strong> — <a href="{% url 'reader:discussion_room' group.slug %}">Bỏ lọc</a>
+    </div>
+  {% endif %}
+
+  <div class="chat-window" id="chatWindow" data-poll-url="{% url 'reader:discussion_messages_poll' group.slug %}" data-last-id="{{ last_id }}">
+    {% for m in messages_list %}
+      <div class="chat-message {% if request.user.is_authenticated and m.user_id == request.user.id %}chat-message-me{% endif %}" data-msg-id="{{ m.id }}">
+        <span class="chat-avatar">{{ m.user.username|first|upper }}</span>
+        <div class="chat-bubble">
+          <div class="chat-bubble-header">
+            <span class="chat-username">{{ m.user.username }}</span>
+            <span class="chat-time">{{ m.created_at|date:"H:i" }}</span>
+          </div>
+          {% if m.content %}<div class="chat-content">{{ m.rendered_content|safe }}</div>{% endif %}
+          {% if m.image %}<img src="{{ m.image.url }}" alt="" class="chat-media-img" loading="lazy">{% endif %}
+          {% if m.video %}<video src="{{ m.video.url }}" controls class="chat-media-video"></video>{% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <p class="tab-placeholder-note">Chưa có tin nhắn nào. Hãy là người đầu tiên nói lời chào!</p>
+    {% endfor %}
+  </div>
+
+  {% if user.is_authenticated %}
+    <form method="post" enctype="multipart/form-data" class="chat-form" id="chatForm">
+      {% csrf_token %}
+      <input type="text" name="content" placeholder="Nhắn gì đó... dùng #hashtag để gắn thẻ" class="chat-text-input" autocomplete="off">
+      <label class="chat-attach-btn" title="Đính kèm ảnh">
+        <i class="fa-solid fa-image"></i>
+        <input type="file" name="image" accept="image/*" hidden>
+      </label>
+      <label class="chat-attach-btn" title="Đính kèm video">
+        <i class="fa-solid fa-video"></i>
+        <input type="file" name="video" accept="video/*" hidden>
+      </label>
+      <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Gửi</button>
+    </form>
+    {% if form.errors %}
+      <p class="chat-form-error">{{ form.non_field_errors|join:" " }}{{ form.image.errors|join:" " }}{{ form.video.errors|join:" " }}</p>
+    {% endif %}
+  {% else %}
+    <p class="tab-placeholder-note"><a href="{% url 'account_login' %}?next={{ request.path }}">Đăng nhập</a> để tham gia thảo luận.</p>
+  {% endif %}
+</section>
+{% endblock %}

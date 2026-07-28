@@ -1,0 +1,56 @@
+{% extends "reader/base.html" %}
+{% block title %}Hồ sơ — MangaVerse{% endblock %}
+{% block content %}
+
+<section class="container section">
+  <div class="profile-header reveal-up in-view">
+    <div class="profile-avatar">{{ user.username|first|upper }}</div>
+    <div class="profile-info">
+      <h1 class="profile-username">{{ user.username }}</h1>
+      <p class="profile-email">{{ user.email|default:"Chưa có email" }}</p>
+      <p class="profile-joined">Tham gia từ {{ user.date_joined|date:"d/m/Y" }}</p>
+      <div class="profile-actions">
+        <a href="{% url 'reader:profile_edit' %}" class="btn btn-ghost"><i class="fa-solid fa-pen"></i> Chỉnh sửa hồ sơ</a>
+        <a href="{% url 'account_change_password' %}" class="btn btn-ghost"><i class="fa-solid fa-lock"></i> Đổi mật khẩu</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-stats reveal-up">
+    <a href="{% url 'reader:following' %}" class="profile-stat-card">
+      <span class="profile-stat-number">{{ follow_count }}</span>
+      <span class="profile-stat-label"><i class="fa-solid fa-bookmark"></i> Theo dõi</span>
+    </a>
+    <a href="{% url 'reader:favorites' %}" class="profile-stat-card">
+      <span class="profile-stat-number">{{ favorite_count }}</span>
+      <span class="profile-stat-label"><i class="fa-solid fa-heart"></i> Yêu thích</span>
+    </a>
+    <a href="{% url 'reader:history' %}" class="profile-stat-card">
+      <span class="profile-stat-number">{{ history_count }}</span>
+      <span class="profile-stat-label"><i class="fa-solid fa-clock-rotate-left"></i> Đã đọc</span>
+    </a>
+  </div>
+</section>
+
+<section class="container section">
+  <h2 class="section-title reveal-up"><i class="fa-solid fa-book-open"></i> Đọc gần đây</h2>
+  <div class="manga-grid">
+    {% for h in recent_history %}
+      <a href="{% url 'reader:chapter_read' h.manga_id h.chapter_id %}" class="manga-card reveal-up">
+        <div class="manga-cover">
+          {% if h.cover_url %}
+            <img src="{{ h.cover_url }}" alt="{{ h.manga_title }}" loading="lazy">
+          {% else %}
+            <div class="no-cover">Không có bìa</div>
+          {% endif %}
+        </div>
+        <h3 class="manga-title">{{ h.manga_title }}</h3>
+        <p class="manga-tags">Chương {{ h.chapter_number }}</p>
+      </a>
+    {% empty %}
+      <p>Bạn chưa đọc truyện nào. Lịch sử đọc sẽ hiện ở đây.</p>
+    {% endfor %}
+  </div>
+</section>
+
+{% endblock %}

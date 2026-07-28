@@ -1,0 +1,128 @@
+{% extends "reader/base.html" %}
+{% block title %}Tìm kiếm nâng cao — MangaVerse{% endblock %}
+{% block content %}
+
+<section class="container section">
+  <h1 class="section-title reveal-up in-view"><i class="fa-solid fa-sliders"></i> Tìm kiếm nâng cao</h1>
+
+  {% if error %}<div class="error-box"><i class="fa-solid fa-triangle-exclamation"></i> {{ error }}</div>{% endif %}
+
+  <form method="get" class="adv-search-form reveal-up in-view" id="advSearchForm">
+
+    <div class="adv-row">
+      <input type="text" name="title" value="{{ title }}" placeholder="Tên truyện..." class="adv-title-input">
+      <button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
+      <a href="{% url 'reader:advanced_search' %}" class="btn btn-ghost"><i class="fa-solid fa-rotate-left"></i> Đặt lại</a>
+    </div>
+
+    <div class="adv-panel">
+      <h3 class="adv-panel-title">Trạng thái</h3>
+      <div class="adv-checkbox-list">
+        {% for s in status_options %}
+          <label class="adv-checkbox">
+            <input type="checkbox" name="status" value="{{ s.code }}" {% if s.code in selected_statuses %}checked{% endif %}>
+            {{ s.label }}
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="adv-panel">
+      <h3 class="adv-panel-title">Đối tượng độc giả</h3>
+      <div class="adv-checkbox-list">
+        {% for d in demographic_options %}
+          <label class="adv-checkbox">
+            <input type="checkbox" name="demographic" value="{{ d.code }}" {% if d.code in selected_demographics %}checked{% endif %}>
+            {{ d.label }}
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="adv-panel">
+      <h3 class="adv-panel-title">Nội dung</h3>
+      <div class="adv-checkbox-list">
+        <label class="adv-checkbox">
+          <input type="checkbox" name="content_rating" value="safe" {% if "safe" in selected_content_ratings %}checked{% endif %}>
+          An toàn
+        </label>
+        <label class="adv-checkbox">
+          <input type="checkbox" name="content_rating" value="suggestive" {% if "suggestive" in selected_content_ratings %}checked{% endif %}>
+          Gợi cảm
+        </label>
+      </div>
+    </div>
+
+    <div class="adv-panel">
+      <div class="adv-panel-header">
+        <h3 class="adv-panel-title">Thể loại</h3>
+        <span class="adv-tag-hint">Bấm 1 lần: <span class="adv-hint-include">bắt buộc có</span> · 2 lần: <span class="adv-hint-exclude">loại trừ</span> · 3 lần: bỏ chọn</span>
+      </div>
+
+      <div class="adv-mode-row">
+        <span class="adv-mode-label">Chế độ "có":</span>
+        <label class="adv-radio"><input type="radio" name="include_mode" value="AND" {% if included_mode == "AND" %}checked{% endif %}> Tất cả (AND)</label>
+        <label class="adv-radio"><input type="radio" name="include_mode" value="OR" {% if included_mode == "OR" %}checked{% endif %}> Bất kỳ (OR)</label>
+        <span class="adv-mode-label">Chế độ "loại trừ":</span>
+        <label class="adv-radio"><input type="radio" name="exclude_mode" value="OR" {% if excluded_mode == "OR" %}checked{% endif %}> Bất kỳ (OR)</label>
+        <label class="adv-radio"><input type="radio" name="exclude_mode" value="AND" {% if excluded_mode == "AND" %}checked{% endif %}> Tất cả (AND)</label>
+      </div>
+
+      {% for group, group_tags in grouped_tags.items %}
+        <h4 class="adv-tag-group-title">{{ group|title }}</h4>
+        <div class="adv-tag-pills">
+          {% for tag in group_tags %}
+            <span class="advtag-pill" data-tag-id="{{ tag.id }}">
+              {{ tag.name }}
+              <input type="checkbox" name="include_tag" value="{{ tag.id }}" hidden {% if tag.id in included_tags %}checked{% endif %}>
+              <input type="checkbox" name="exclude_tag" value="{{ tag.id }}" hidden {% if tag.id in excluded_tags %}checked{% endif %}>
+            </span>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="adv-panel">
+      <h3 class="adv-panel-title">Sắp xếp</h3>
+      <div class="adv-sort-row">
+        <select name="order_by">
+          {% for opt in sort_options %}
+            <option value="{{ opt.code }}" {% if opt.code == order_by %}selected{% endif %}>{{ opt.label }}</option>
+          {% endfor %}
+        </select>
+        <label class="adv-radio"><input type="radio" name="order_dir" value="desc" {% if order_dir == "desc" %}checked{% endif %}> Giảm dần</label>
+        <label class="adv-radio"><input type="radio" name="order_dir" value="asc" {% if order_dir == "asc" %}checked{% endif %}> Tăng dần</label>
+      </div>
+    </div>
+
+  </form>
+</section>
+
+<section class="container section">
+  {% if has_filters %}
+    <h2 class="section-title reveal-up">Kết quả</h2>
+    <div class="manga-grid">
+      {% for m in results %}
+        <a href="{% url 'reader:manga_detail' m.id %}" class="manga-card reveal-up">
+          <div class="manga-cover">
+            {% if m.cover_url %}
+              <img src="{{ m.cover_url }}" alt="{{ m.title }}" loading="lazy">
+            {% else %}
+              <div class="no-cover">Không có bìa</div>
+            {% endif %}
+            <span class="manga-status status-{{ m.status }}">{{ m.status }}</span>
+          </div>
+          <h3 class="manga-title">{{ m.title }}</h3>
+          {% if m.tags %}<p class="manga-tags">{% for tag in m.tags %}{{ tag.name }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+        </a>
+      {% empty %}
+        {% if not error %}<p>Không tìm thấy truyện nào khớp với bộ lọc.</p>{% endif %}
+      {% endfor %}
+    </div>
+    {% include "reader/_pagination.html" with pagination_query_prefix=query_prefix %}
+  {% else %}
+    <p class="adv-empty-hint">Chọn ít nhất 1 bộ lọc (tên truyện, trạng thái, đối tượng, hoặc thể loại) rồi bấm "Tìm kiếm".</p>
+  {% endif %}
+</section>
+
+{% endblock %}

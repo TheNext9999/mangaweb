@@ -1,0 +1,22 @@
+{% extends "reader/base.html" %}
+{% block title %}Thể loại — MangaVerse{% endblock %}
+{% block content %}
+<section class="container section">
+  <h1 class="section-title reveal-up in-view"><i class="fa-solid fa-layer-group"></i> Tất cả thể loại</h1>
+
+  {% if error %}<div class="error-box"><i class="fa-solid fa-triangle-exclamation"></i> {{ error }}</div>{% endif %}
+
+  {% for group, tags in grouped.items %}
+    <div class="genre-group reveal-up">
+      <h2 class="genre-group-title">{{ group|title }}</h2>
+      <div class="genre-chip-list">
+        {% for tag in tags %}
+          <a href="{% url 'reader:genre_detail' tag.id %}" class="genre-chip">{{ tag.name }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  {% empty %}
+    {% if not error %}<p>Không tải được danh sách thể loại.</p>{% endif %}
+  {% endfor %}
+</section>
+{% endblock %}

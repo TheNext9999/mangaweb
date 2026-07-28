@@ -1,0 +1,17 @@
+{% extends "reader/base.html" %}
+{% block title %}Chỉnh sửa hồ sơ — MangaVerse{% endblock %}
+{% block content %}
+<section class="container section auth-section">
+  <div class="auth-card reveal-up in-view">
+    <h1 class="section-title"><i class="fa-solid fa-pen"></i> Chỉnh sửa hồ sơ</h1>
+
+    <form method="post" class="auth-form">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary auth-submit"><i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi</button>
+    </form>
+
+    <p class="auth-switch"><a href="{% url 'reader:profile' %}"><i class="fa-solid fa-arrow-left"></i> Quay lại hồ sơ</a></p>
+  </div>
+</section>
+{% endblock %}

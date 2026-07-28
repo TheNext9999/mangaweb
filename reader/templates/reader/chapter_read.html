@@ -1,0 +1,94 @@
+{% extends "reader/base.html" %}
+{% block title %}{{ manga.title|default:"Đọc truyện" }} — Chương {{ current_chapter.chapter }}{% endblock %}
+{% block content %}
+
+<section class="container reader-bar reveal-up in-view">
+  <a href="{% url 'reader:manga_detail' manga_id %}" class="btn btn-ghost"><i class="fa-solid fa-arrow-left"></i> Về trang truyện</a>
+  <h1 class="reader-title">
+    {{ manga.title }} — Chương {{ current_chapter.chapter }}
+    {% if current_chapter.title %} · {{ current_chapter.title }}{% endif %}
+  </h1>
+  <div class="reader-nav">
+    {% if prev_chapter %}
+      <a href="{% url 'reader:chapter_read' manga_id prev_chapter.id %}" class="btn btn-ghost"><i class="fa-solid fa-chevron-left"></i> Chương trước</a>
+    {% endif %}
+    {% if next_chapter %}
+      <a href="{% url 'reader:chapter_read' manga_id next_chapter.id %}" class="btn btn-primary">Chương sau <i class="fa-solid fa-chevron-right"></i></a>
+    {% endif %}
+  </div>
+</section>
+
+{% if error %}
+  <div class="container"><div class="error-box"><i class="fa-solid fa-triangle-exclamation"></i> {{ error }}</div></div>
+{% endif %}
+
+<div class="container">
+  <div class="continue-banner" id="continueBanner">
+    <span><i class="fa-solid fa-bookmark"></i> Bạn đang đọc dở chương này.</span>
+    <div class="continue-banner-actions">
+      <button type="button" id="continueBannerResume" class="btn btn-primary">Tiếp tục đọc</button>
+      <button type="button" id="continueBannerDismiss" class="btn btn-ghost">Đọc từ đầu</button>
+    </div>
+  </div>
+</div>
+
+<section class="reader-strip reader-size-{{ reader_page_size }}" data-chapter-id="{{ current_chapter.id }}">
+  {% for page_url in pages %}
+    <img src="{{ page_url }}" alt="Trang {{ forloop.counter }}" loading="lazy" class="reader-page"
+         referrerpolicy="no-referrer" data-attempts="0">
+  {% empty %}
+    {% if not error %}<p class="container">Không tải được ảnh chương này.</p>{% endif %}
+  {% endfor %}
+</section>
+
+<section class="container reader-bar-bottom">
+  {% if prev_chapter %}
+    <a href="{% url 'reader:chapter_read' manga_id prev_chapter.id %}" class="btn btn-ghost"><i class="fa-solid fa-chevron-left"></i> Chương trước</a>
+  {% endif %}
+  {% if next_chapter %}
+    <a href="{% url 'reader:chapter_read' manga_id next_chapter.id %}" class="btn btn-primary">Chương sau <i class="fa-solid fa-chevron-right"></i></a>
+  {% endif %}
+</section>
+
+<div class="reader-toolbar" id="readerToolbar">
+  <button type="button" class="rt-btn rt-btn-accent" id="rtScrollTop" aria-label="Lên đầu trang"><i class="fa-solid fa-arrow-up"></i></button>
+
+  <a href="{% url 'reader:manga_detail' manga_id %}#chapter-list" class="rt-btn" aria-label="Danh sách chương"><i class="fa-solid fa-list-ul"></i></a>
+
+  {% if prev_chapter %}
+    <a href="{% url 'reader:chapter_read' manga_id prev_chapter.id %}" class="rt-btn rt-btn-warn" aria-label="Chương trước"><i class="fa-solid fa-chevron-left"></i></a>
+  {% else %}
+    <span class="rt-btn rt-btn-warn rt-disabled" aria-hidden="true"><i class="fa-solid fa-chevron-left"></i></span>
+  {% endif %}
+
+  <div class="rt-select-wrap">
+    <button type="button" class="rt-select-trigger" id="rtSelectTrigger">
+      <span>Chương {{ current_chapter.chapter }}</span>
+      <span class="rt-select-caret"><i class="fa-solid fa-chevron-down"></i></span>
+    </button>
+    <div class="rt-select-dropdown" id="rtSelectDropdown">
+      {% for c in chapters %}
+        <a href="{% url 'reader:chapter_read' manga_id c.id %}" class="rt-select-option {% if c.id == current_chapter.id %}selected{% endif %}">
+          <span class="rt-check">{% if c.id == current_chapter.id %}<i class="fa-solid fa-check"></i>{% endif %}</span>
+          Chương {{ c.chapter }}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if next_chapter %}
+    <a href="{% url 'reader:chapter_read' manga_id next_chapter.id %}" class="rt-btn rt-btn-accent" aria-label="Chương sau"><i class="fa-solid fa-chevron-right"></i></a>
+  {% else %}
+    <span class="rt-btn rt-btn-accent rt-disabled" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
+  {% endif %}
+
+  <div class="rt-more-wrap">
+    <button type="button" class="rt-btn" id="rtMoreTrigger" aria-label="Thêm"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+    <div class="rt-more-dropdown" id="rtMoreDropdown">
+      <a href="{% url 'reader:manga_detail' manga_id %}"><i class="fa-solid fa-book-open"></i> Về trang truyện</a>
+      <a href="{% url 'reader:manga_detail' manga_id %}#chapter-list"><i class="fa-solid fa-list-ul"></i> Toàn bộ chương</a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

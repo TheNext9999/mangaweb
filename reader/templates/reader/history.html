@@ -1,0 +1,22 @@
+{% extends "reader/base.html" %}
+{% block title %}Lịch sử đọc — MangaVerse{% endblock %}
+{% block content %}
+<section class="container section">
+  <h1 class="section-title reveal-up in-view"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử đọc</h1>
+
+  <div class="chapter-list">
+    {% for h in items %}
+      <a href="{% url 'reader:chapter_read' h.manga_id h.chapter_id %}" class="chapter-row reveal-up">
+        {% if h.cover_url %}
+          <img src="{{ h.cover_url }}" alt="" class="history-thumb">
+        {% endif %}
+        <span class="chapter-name">{{ h.manga_title }}</span>
+        <span class="chapter-number">Chương {{ h.chapter_number }}</span>
+        <span class="chapter-group">{{ h.read_at|date:"d/m/Y H:i" }}</span>
+      </a>
+    {% empty %}
+      <p>Bạn chưa đọc truyện nào. Lịch sử sẽ tự động lưu lại mỗi khi bạn mở một chương.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,5 @@
+Django>=4.2,<5.1
+requests>=2.31
+django-allauth>=0.63
+python-dotenv>=1.0
+Pillow>=10.0

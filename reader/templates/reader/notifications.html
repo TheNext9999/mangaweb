@@ -1,0 +1,36 @@
+{% extends "reader/base.html" %}
+{% block title %}Thông báo — MangaVerse{% endblock %}
+{% block content %}
+<section class="container section">
+  <div class="notif-page-header reveal-up in-view">
+    <h1 class="section-title" style="margin:0;"><i class="fa-solid fa-bell"></i> Thông báo</h1>
+    {% if unread_notif_count > 0 %}
+      <form method="post" action="{% url 'reader:notifications_mark_all_read' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'reader:notifications' %}">
+        <button type="submit" class="btn btn-ghost">Đánh dấu tất cả đã đọc</button>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="notif-list-page">
+    {% for n in items %}
+      <a href="{% url 'reader:notification_open' n.pk %}" class="notif-page-item reveal-up {% if not n.is_read %}unread{% endif %}">
+        {% if n.cover_url %}
+          <img src="{{ n.cover_url }}" alt="" class="notif-page-thumb">
+        {% endif %}
+        <span class="notif-page-text">
+          <span class="notif-page-title">
+            {% if n.flag %}<span class="fi fi-{{ n.flag }} notif-flag"></span>{% endif %}
+            {{ n.manga_title }}
+          </span>
+          <span class="notif-page-sub">Chương mới: {{ n.chapter_number }}</span>
+        </span>
+        <span class="notif-page-time">{% load reader_extras %}{{ n.created_at|short_timesince }}</span>
+      </a>
+    {% empty %}
+      <p>Chưa có thông báo nào. Theo dõi truyện ở trang chi tiết truyện để nhận tin khi có chương mới.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

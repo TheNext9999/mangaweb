@@ -1,0 +1,53 @@
+{% extends "reader/base.html" %}
+{% block title %}Tìm kiếm: {{ query }} — MangaVerse{% endblock %}
+{% block content %}
+<section class="container section">
+  <h1 class="section-title reveal-up in-view">
+    {% if query %}Kết quả cho “{{ query }}”{% else %}Tìm truyện{% endif %}
+  </h1>
+  <p class="adv-search-link"><a href="{% url 'reader:advanced_search' %}"><i class="fa-solid fa-sliders"></i> Tìm kiếm nâng cao (lọc theo thể loại, trạng thái...)</a></p>
+
+  {% if error %}
+    <div class="error-box"><i class="fa-solid fa-triangle-exclamation"></i> {{ error }}</div>
+  {% endif %}
+
+  <div class="manga-grid">
+    {% for m in results %}
+      <a href="{% url 'reader:manga_detail' m.id %}" class="manga-card reveal-up">
+        <div class="manga-cover">
+          {% if m.cover_url %}
+            <img src="{{ m.cover_url }}" alt="{{ m.title }}" loading="lazy">
+          {% else %}
+            <div class="no-cover">Không có bìa</div>
+          {% endif %}
+        </div>
+        <h3 class="manga-title">{{ m.title }}</h3>
+        {% if m.tags %}<p class="manga-tags">{% for tag in m.tags %}{{ tag.name }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+      </a>
+    {% empty %}
+      {% if query and not error %}
+        {% if has_restricted %}
+          <div class="content-warning-note">
+            <div class="content-warning-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <p class="content-warning-text">
+              MangaVerse phát hiện truyện có thể có nội dung phản cảm không phù hợp với thiết lập của bạn.
+            </p>
+            <a href="https://mangadex.org/search?q={{ query|urlencode }}" target="_blank" rel="noopener" class="btn btn-primary">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> Đọc trên MangaDex
+            </a>
+          </div>
+        {% else %}
+          <div class="empty-search-note">
+            <p>Không tìm thấy truyện nào khớp với “{{ query }}” trong phạm vi nội dung mà trang hiển thị.</p>
+            <p class="empty-search-hint">
+              Trang chỉ hiển thị truyện được MangaDex xếp hạng <strong>Safe</strong> hoặc <strong>Suggestive</strong>.
+            </p>
+          </div>
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  {% include "reader/_pagination.html" with pagination_query_prefix=query_prefix %}
+</section>
+{% endblock %}
