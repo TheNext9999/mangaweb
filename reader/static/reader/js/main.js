@@ -375,13 +375,20 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// ---------- Discussion room: poll for new messages ----------
+// ---------- Discussion room: poll for new messages + pin/edit/delete menu ----------
 document.addEventListener("DOMContentLoaded", () => {
   const chatWindow = document.getElementById("chatWindow");
   if (!chatWindow) return;
 
   const pollUrl = chatWindow.dataset.pollUrl;
+  const baseUrl = chatWindow.dataset.baseUrl;
   let lastId = parseInt(chatWindow.dataset.lastId || "0", 10);
+
+  function getCookie(name) {
+    const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+    return match ? decodeURIComponent(match[2]) : null;
+  }
+  const csrftoken = getCookie("csrftoken");
 
   function escapeHtml(str) {
     const div = document.createElement("div");
@@ -394,13 +401,23 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   scrollToBottom();
 
+  function buildMenuHtml(m) {
+    if (!m.can_edit && !m.can_delete) return "";
+    let html = '<span class="chat-menu-wrap"><button type="button" class="chat-menu-btn" aria-label="Tuỳ chọn"><i class="fa-solid fa-ellipsis"></i></button><div class="chat-menu-dropdown">';
+    html += `<button type="button" class="chat-menu-item chat-action-pin" data-pinned="${m.is_pinned ? "true" : "false"}"><i class="fa-solid fa-thumbtack"></i> ${m.is_pinned ? "Bỏ ghim" : "Ghim"}</button>`;
+    if (m.can_edit) html += '<button type="button" class="chat-menu-item chat-action-edit"><i class="fa-solid fa-pen"></i> Sửa</button>';
+    if (m.can_delete) html += '<button type="button" class="chat-menu-item chat-action-delete chat-action-danger"><i class="fa-solid fa-trash"></i> Xoá</button>';
+    html += "</div></span>";
+    return html;
+  }
+
   function appendMessage(m) {
     const div = document.createElement("div");
     div.className = "chat-message" + (m.is_me ? " chat-message-me" : "");
     div.dataset.msgId = m.id;
 
     let inner = `<span class="chat-avatar">${escapeHtml(m.username.charAt(0).toUpperCase())}</span><div class="chat-bubble">`;
-    inner += `<div class="chat-bubble-header"><span class="chat-username">${escapeHtml(m.username)}</span><span class="chat-time">${escapeHtml(m.created_at)}</span></div>`;
+    inner += `<div class="chat-bubble-header"><span class="chat-username">${escapeHtml(m.username)}</span><span class="chat-time">${escapeHtml(m.created_at)}</span>${buildMenuHtml(m)}</div>`;
     if (m.content_html) inner += `<div class="chat-content">${m.content_html}</div>`;
     if (m.image_url) inner += `<img src="${escapeHtml(m.image_url)}" alt="" class="chat-media-img" loading="lazy">`;
     if (m.video_url) inner += `<video src="${escapeHtml(m.video_url)}" controls class="chat-media-video"></video>`;
@@ -426,8 +443,114 @@ document.addEventListener("DOMContentLoaded", () => {
       // network hiccup — just try again next interval
     }
   }
-
   setInterval(poll, 4000);
+
+  // ---- "..." menu: open/close ----
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".chat-menu-wrap")) {
+      document.querySelectorAll(".chat-menu-dropdown.open").forEach((d) => d.classList.remove("open"));
+    }
+  });
+
+  chatWindow.addEventListener("click", async (e) => {
+    const menuBtn = e.target.closest(".chat-menu-btn");
+    if (menuBtn) {
+      const dropdown = menuBtn.nextElementSibling;
+      const willOpen = !dropdown.classList.contains("open");
+      document.querySelectorAll(".chat-menu-dropdown.open").forEach((d) => d.classList.remove("open"));
+      dropdown.classList.toggle("open", willOpen);
+      return;
+    }
+
+    const msgEl = e.target.closest(".chat-message");
+    if (!msgEl) return;
+    const msgId = msgEl.dataset.msgId;
+
+    const pinBtn = e.target.closest(".chat-action-pin");
+    if (pinBtn) {
+      try {
+        const res = await fetch(`${baseUrl}tin-nhan/${msgId}/ghim/`, {
+          method: "POST",
+          headers: { "X-CSRFToken": csrftoken },
+        });
+        const data = await res.json();
+        if (data.ok) {
+          // Reload so the "Tin nhắn đã ghim" panel above stays accurate.
+          window.location.reload();
+        }
+      } catch (err) { /* ignore */ }
+      return;
+    }
+
+    const deleteBtn = e.target.closest(".chat-action-delete");
+    if (deleteBtn) {
+      if (!window.confirm("Xoá tin nhắn này?")) return;
+      try {
+        const res = await fetch(`${baseUrl}tin-nhan/${msgId}/xoa/`, {
+          method: "POST",
+          headers: { "X-CSRFToken": csrftoken },
+        });
+        const data = await res.json();
+        if (data.ok) {
+          msgEl.remove();
+        } else {
+          window.alert(data.error || "Không thể xoá tin nhắn.");
+        }
+      } catch (err) { /* ignore */ }
+      return;
+    }
+
+    const editBtn = e.target.closest(".chat-action-edit");
+    if (editBtn) {
+      document.querySelectorAll(".chat-menu-dropdown.open").forEach((d) => d.classList.remove("open"));
+      const contentEl = msgEl.querySelector(".chat-content");
+      const current = contentEl ? contentEl.textContent.trim() : "";
+      const bubble = msgEl.querySelector(".chat-bubble");
+      if (bubble.querySelector(".chat-edit-row")) return;
+
+      const editRow = document.createElement("div");
+      editRow.className = "chat-edit-row";
+      editRow.innerHTML =
+        `<input type="text" class="chat-edit-input" value="${escapeHtml(current)}">` +
+        '<button type="button" class="chat-edit-save btn btn-primary">Lưu</button>' +
+        '<button type="button" class="chat-edit-cancel btn btn-ghost">Huỷ</button>';
+
+      if (contentEl) contentEl.style.display = "none";
+      bubble.appendChild(editRow);
+      editRow.querySelector(".chat-edit-input").focus();
+
+      editRow.querySelector(".chat-edit-cancel").addEventListener("click", () => {
+        editRow.remove();
+        if (contentEl) contentEl.style.display = "";
+      });
+
+      editRow.querySelector(".chat-edit-save").addEventListener("click", async () => {
+        const newContent = editRow.querySelector(".chat-edit-input").value.trim();
+        if (!newContent) return;
+        try {
+          const res = await fetch(`${baseUrl}tin-nhan/${msgId}/sua/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken },
+            body: JSON.stringify({ content: newContent }),
+          });
+          const data = await res.json();
+          if (data.ok) {
+            if (contentEl) {
+              contentEl.innerHTML = data.content_html;
+              contentEl.style.display = "";
+            }
+            const timeEl = msgEl.querySelector(".chat-time");
+            if (timeEl && timeEl.textContent.indexOf("đã sửa") === -1) {
+              timeEl.textContent += " · đã sửa";
+            }
+            editRow.remove();
+          } else {
+            window.alert(data.error || "Không thể sửa tin nhắn.");
+          }
+        } catch (err) { /* ignore */ }
+      });
+    }
+  });
 });
 
 // ---------- Chapter list: client-side sort + pagination ----------

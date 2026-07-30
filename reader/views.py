@@ -490,6 +490,58 @@ def _linkify_hashtags(text):
     return re.sub(r"#(\w+)", repl, escaped)
 
 
+def _is_group_moderator(user, group):
+    """Owner or a promoted admin — allowed to delete anyone's message."""
+    if not user.is_authenticated:
+        return False
+    if group.created_by_id == user.id:
+        return True
+    return GroupMembership.objects.filter(group=group, user=user, is_admin=True).exists()
+
+
+@login_required
+@require_POST
+def discussion_message_pin(request, slug, message_id):
+    group = get_object_or_404(DiscussionGroup, slug=slug)
+    msg = get_object_or_404(GroupMessage, pk=message_id, group=group)
+    msg.is_pinned = not msg.is_pinned
+    msg.save(update_fields=["is_pinned"])
+    return JsonResponse({"ok": True, "is_pinned": msg.is_pinned})
+
+
+@login_required
+@require_POST
+def discussion_message_edit(request, slug, message_id):
+    group = get_object_or_404(DiscussionGroup, slug=slug)
+    msg = get_object_or_404(GroupMessage, pk=message_id, group=group)
+    if msg.user_id != request.user.id:
+        return JsonResponse({"ok": False, "error": "Bạn chỉ có thể sửa tin nhắn của chính mình."}, status=403)
+
+    try:
+        payload = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        payload = {}
+    content = (payload.get("content") or "").strip()
+    if not content:
+        return JsonResponse({"ok": False, "error": "Nội dung không được để trống."}, status=400)
+
+    msg.content = content
+    msg.is_edited = True
+    msg.save(update_fields=["content", "is_edited"])
+    return JsonResponse({"ok": True, "content_html": _linkify_hashtags(msg.content)})
+
+
+@login_required
+@require_POST
+def discussion_message_delete(request, slug, message_id):
+    group = get_object_or_404(DiscussionGroup, slug=slug)
+    msg = get_object_or_404(GroupMessage, pk=message_id, group=group)
+    if msg.user_id != request.user.id and not _is_group_moderator(request.user, group):
+        return JsonResponse({"ok": False, "error": "Bạn không có quyền xoá tin nhắn này."}, status=403)
+    msg.delete()
+    return JsonResponse({"ok": True})
+
+
 def discussion_list(request):
     query = request.GET.get("q", "").strip()
     groups = DiscussionGroup.objects.annotate(
@@ -527,6 +579,7 @@ def discussion_join(request, slug):
 def discussion_room(request, slug):
     group = get_object_or_404(DiscussionGroup, slug=slug)
     is_member = request.user.is_authenticated and GroupMembership.objects.filter(group=group, user=request.user).exists()
+    is_moderator = _is_group_moderator(request.user, group)
 
     tag = request.GET.get("tag", "").strip()
     msgs = group.messages.select_related("user")
@@ -535,6 +588,10 @@ def discussion_room(request, slug):
     msgs = list(msgs[:200])
     for m in msgs:
         m.rendered_content = _linkify_hashtags(m.content) if m.content else ""
+        m.can_edit = request.user.is_authenticated and m.user_id == request.user.id
+        m.can_delete = m.can_edit or is_moderator
+
+    pinned_msgs = [m for m in msgs if m.is_pinned]
 
     form = None
     if request.user.is_authenticated:
@@ -555,8 +612,10 @@ def discussion_room(request, slug):
     return render(request, "reader/discussion_room.html", {
         "group": group,
         "messages_list": msgs,
+        "pinned_messages": pinned_msgs,
         "form": form,
         "is_member": is_member,
+        "is_moderator": is_moderator,
         "member_count": member_count,
         "tag": tag,
         "last_id": msgs[-1].id if msgs else 0,
@@ -567,6 +626,7 @@ def discussion_messages_poll(request, slug):
     """JSON endpoint: returns any messages newer than ?after=<id>, for the
     chat room's periodic polling (near-real-time without WebSockets)."""
     group = get_object_or_404(DiscussionGroup, slug=slug)
+    is_moderator = _is_group_moderator(request.user, group)
     try:
         after_id = int(request.GET.get("after", 0))
     except ValueError:
@@ -575,6 +635,7 @@ def discussion_messages_poll(request, slug):
     new_msgs = group.messages.select_related("user").filter(id__gt=after_id)[:50]
     results = []
     for m in new_msgs:
+        can_edit = request.user.is_authenticated and m.user_id == request.user.id
         results.append({
             "id": m.id,
             "username": m.user.username,
@@ -582,7 +643,10 @@ def discussion_messages_poll(request, slug):
             "image_url": m.image.url if m.image else None,
             "video_url": m.video.url if m.video else None,
             "created_at": m.created_at.strftime("%H:%M"),
-            "is_me": request.user.is_authenticated and m.user_id == request.user.id,
+            "is_me": can_edit,
+            "can_edit": can_edit,
+            "can_delete": can_edit or is_moderator,
+            "is_pinned": m.is_pinned,
         })
     return JsonResponse({"messages": results})
 

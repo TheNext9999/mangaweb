@@ -45,31 +45,26 @@ class DiscussionGroup(models.Model):
     """A public discussion/chat group, like a Discord channel."""
     name = models.CharField(max_length=120)
     description = models.CharField(max_length=255, blank=True)
+    slug = models.SlugField(max_length=140, unique=True, blank=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="created_groups")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-created_at"]
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base = slugify(self.name)[:120] or "nhom"
+            slug = base
+            i = 1
+            while DiscussionGroup.objects.filter(slug=slug).exists():
+                i += 1
+                slug = f"{base}-{i}"
+            self.slug = slug
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.name
-
-
-class GroupMessage(models.Model):
-    """One chat message in a DiscussionGroup — text, an image, and/or a
-    video. Files are stored under MEDIA_ROOT (see settings.py)."""
-    group = models.ForeignKey(DiscussionGroup, on_delete=models.CASCADE, related_name="messages")
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="group_messages")
-    content = models.TextField(blank=True)
-    image = models.ImageField(upload_to="", blank=True, null=True)
-    video = models.FileField(upload_to="", blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["created_at"]
-
-    def __str__(self):
-        return f"{self.user} in {self.group}: {self.content[:30]}"
 
 
 class Notification(models.Model):
@@ -118,9 +113,10 @@ class DiscussionGroup(models.Model):
 
 
 class GroupMembership(models.Model):
-    """Tracks who has joined which discussion group."""
+    """Tracks who has joined which discussion group, and who moderates it."""
     group = models.ForeignKey(DiscussionGroup, on_delete=models.CASCADE, related_name="memberships")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="chat_memberships")
+    is_admin = models.BooleanField(default=False)
     joined_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -137,6 +133,8 @@ class GroupMessage(models.Model):
     content = models.TextField(blank=True)
     image = models.ImageField(storage=chat_image_storage, upload_to="", blank=True, null=True)
     video = models.FileField(storage=chat_video_storage, upload_to="", blank=True, null=True)
+    is_pinned = models.BooleanField(default=False)
+    is_edited = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

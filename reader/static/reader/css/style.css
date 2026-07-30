@@ -1803,6 +1803,81 @@ footer.site-footer a { color: var(--accent-2); }
   margin-top: 10px;
 }
 
+.chat-bubble-header { position: relative; }
+.chat-menu-wrap { position: relative; margin-left: auto; }
+.chat-menu-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+.chat-menu-btn:hover { background: var(--bg-elevated); color: var(--text); }
+.chat-menu-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: #16181f;
+  border: 1px solid #2b2e3a;
+  border-radius: 10px;
+  min-width: 140px;
+  padding: 6px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+  z-index: 20;
+}
+.chat-menu-dropdown.open { display: block; }
+.chat-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: #e8e8ee;
+  font-size: 0.82rem;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+.chat-menu-item:hover { background: #24273a; }
+.chat-action-danger { color: #ff8a8a; }
+
+.pinned-messages-block {
+  background: rgba(255, 184, 77, 0.1);
+  border: 1px solid rgba(255, 184, 77, 0.35);
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+}
+.pinned-messages-block summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #ffb84d;
+  list-style: none;
+}
+.pinned-messages-block summary::-webkit-details-marker { display: none; }
+.pinned-messages-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.pinned-message-row { font-size: 0.85rem; color: var(--text-dim); }
+.chat-content-inline { color: var(--text); }
+
+.chat-edit-row { display: flex; gap: 6px; margin-top: 6px; }
+.chat-edit-input {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 6px 10px;
+  font-size: 0.85rem;
+}
+.chat-edit-row .btn { padding: 6px 12px; font-size: 0.78rem; }
+
 /* ---------- Discussion groups ---------- */
 .discussion-grid {
   display: grid;
