@@ -149,10 +149,9 @@ hiệu ứng xuất hiện lệch nhịp (staggered) thay vì bật lên cùng l
 - Thêm chế độ đọc "data-saver" (ảnh nén) bằng cách truyền `data_saver=True`
   vào `services.get_chapter_pages()`.
 
-## ⚠️ Lưu ý (Disclaimer)
-Dự án này được thực hiện hoàn toàn với mục đích học tập, nghiên cứu công nghệ (Django + API) và tham khảo từ nhiều nguồn mở khác nhau. Dự án hoàn toàn phi thương mại và không sử dụng cho bất kỳ mục đích kinh doanh nào.
-
 ## Lưu ý bản quyền / chính sách MangaDex
+
+Dự án này được thực hiện hoàn toàn với mục đích học tập, nghiên cứu công nghệ (Django + API) và tham khảo từ nhiều nguồn mở khác nhau. Dự án hoàn toàn phi thương mại và không sử dụng cho bất kỳ mục đích kinh doanh nào.
 
 MangaDex yêu cầu ghi công MangaDex và nhóm dịch (scanlation group) của từng
 chương, không được chèn quảng cáo hoặc thu phí trên nội dung lấy từ API của
