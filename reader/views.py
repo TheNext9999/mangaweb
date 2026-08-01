@@ -708,6 +708,14 @@ def discussion_messages_poll(request, slug):
     return JsonResponse({"messages": results})
 
 
+def privacy_policy(request):
+    return render(request, "reader/legal/privacy_policy.html")
+
+
+def terms_of_service(request):
+    return render(request, "reader/legal/terms_of_service.html")
+
+
 def profile(request):
     follow_count = Bookmark.objects.filter(user=request.user, kind=Bookmark.FOLLOW).count()
     favorite_count = Bookmark.objects.filter(user=request.user, kind=Bookmark.FAVORITE).count()

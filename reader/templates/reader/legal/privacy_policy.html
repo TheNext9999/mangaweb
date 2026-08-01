@@ -1,0 +1,58 @@
+{% extends "reader/base.html" %}
+{% load static %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'reader/css/legal.css' %}">
+{% endblock %}
+{% block title %}Chính sách bảo mật — MangaVerse{% endblock %}
+{% block content %}
+<section class="container legal-section">
+  <div class="legal-card reveal-up in-view">
+    <h1 class="legal-title"><i class="fa-solid fa-shield-halved"></i> Chính sách bảo mật</h1>
+    <p class="legal-updated">Áp dụng cho toàn bộ website MangaVerse.</p>
+
+    <nav class="legal-toc">
+      <a href="#thu-thap">1. Thông tin chúng tôi thu thập</a>
+      <a href="#su-dung">2. Cách chúng tôi sử dụng thông tin</a>
+      <a href="#ben-thu-ba">3. Dữ liệu truyện từ MangaDex</a>
+      <a href="#cookie">4. Cookie &amp; lưu trữ cục bộ</a>
+      <a href="#chia-se">5. Chia sẻ thông tin</a>
+      <a href="#bao-mat">6. Bảo mật dữ liệu</a>
+      <a href="#quyen">7. Quyền của bạn</a>
+      <a href="#tre-em">8. Trẻ em</a>
+      <a href="#thay-doi">9. Thay đổi chính sách</a>
+      <a href="#lien-he">10. Liên hệ</a>
+    </nav>
+
+    <h2 id="thu-thap">1. Thông tin chúng tôi thu thập</h2>
+    <p>Khi bạn tạo tài khoản, chúng tôi thu thập tên đăng nhập, địa chỉ email và mật khẩu (được mã hoá, chúng tôi không bao giờ lưu mật khẩu dạng chữ thường). Nếu bạn đăng nhập bằng Google, chúng tôi nhận tên và email từ tài khoản Google của bạn theo phạm vi bạn đồng ý cấp quyền.</p>
+    <p>Trong quá trình sử dụng, chúng tôi lưu lại: danh sách truyện bạn theo dõi/yêu thích, lịch sử đọc, chương đã đọc, và nội dung bạn đăng trong mục Thảo luận (tin nhắn, ảnh, video). Máy chủ cũng ghi lại thông tin kỹ thuật cơ bản (địa chỉ IP, loại trình duyệt) phục vụ vận hành và bảo mật hệ thống.</p>
+
+    <h2 id="su-dung">2. Cách chúng tôi sử dụng thông tin</h2>
+    <p>Thông tin thu thập được dùng để: vận hành tài khoản của bạn, ghi nhớ tiến độ đọc truyện, gửi thông báo khi truyện bạn theo dõi có chương mới, và cho phép bạn tham gia mục Thảo luận. Chúng tôi không dùng dữ liệu của bạn cho mục đích quảng cáo.</p>
+
+    <h2 id="ben-thu-ba">3. Dữ liệu truyện từ MangaDex</h2>
+    <p>Toàn bộ nội dung truyện (tên, mô tả, bìa, danh sách chương, hình ảnh trang truyện) được lấy trực tiếp từ <a href="https://mangadex.org" target="_blank" rel="noopener">MangaDex API</a> công khai — MangaVerse không sở hữu, không lưu trữ và không chỉnh sửa nội dung này. Việc bạn đọc truyện đồng nghĩa dữ liệu ảnh trang truyện được tải trực tiếp từ hạ tầng của MangaDex (mạng @Home) về trình duyệt của bạn.</p>
+
+    <h2 id="cookie">4. Cookie &amp; lưu trữ cục bộ</h2>
+    <p>Chúng tôi dùng session cookie để giữ bạn đăng nhập, và <code>localStorage</code> trên trình duyệt để ghi nhớ một số tuỳ chọn hiển thị không cần đăng nhập: giao diện Sáng/Tối và vị trí cuộn dở của chương bạn đang đọc. Các dữ liệu này chỉ nằm trên trình duyệt của bạn, không được gửi lên máy chủ, và không dùng để theo dõi bạn trên các trang web khác.</p>
+
+    <h2 id="chia-se">5. Chia sẻ thông tin</h2>
+    <p>Chúng tôi không bán, cho thuê hay trao đổi thông tin cá nhân của bạn với bên thứ ba vì mục đích thương mại. Thông tin chỉ được chia sẻ khi: bạn chủ động đăng công khai (ví dụ tin nhắn trong mục Thảo luận), hoặc khi pháp luật yêu cầu.</p>
+
+    <h2 id="bao-mat">6. Bảo mật dữ liệu</h2>
+    <p>Mật khẩu tài khoản được mã hoá theo cơ chế bảo mật tiêu chuẩn của Django, không lưu dạng chữ thường ở bất kỳ đâu. Dù vậy, không có hệ thống nào an toàn tuyệt đối — bạn nên dùng mật khẩu đủ mạnh và không dùng chung với các trang khác.</p>
+
+    <h2 id="quyen">7. Quyền của bạn</h2>
+    <p>Bạn có thể xem và chỉnh sửa thông tin hồ sơ (username, email) trong trang Hồ sơ bất cứ lúc nào. Nếu muốn xoá toàn bộ tài khoản và dữ liệu liên quan, vui lòng liên hệ theo thông tin ở mục 10.</p>
+
+    <h2 id="tre-em">8. Trẻ em</h2>
+    <p>MangaVerse không dành cho người dùng dưới 13 tuổi. Nội dung truyện hiển thị trên trang giới hạn ở mức Safe/Suggestive theo phân loại của MangaDex.</p>
+
+    <h2 id="thay-doi">9. Thay đổi chính sách</h2>
+    <p>Chính sách này có thể được cập nhật theo thời gian khi trang bổ sung tính năng mới. Phiên bản mới nhất luôn được đăng tại trang này.</p>
+
+    <h2 id="lien-he">10. Liên hệ</h2>
+    <p>Nếu có câu hỏi về chính sách bảo mật này, vui lòng liên hệ qua trang quản trị viên của website.</p>
+  </div>
+</section>
+{% endblock %}

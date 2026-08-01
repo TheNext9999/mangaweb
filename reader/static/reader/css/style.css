@@ -901,6 +901,8 @@ footer.site-footer {
   text-align: center;
 }
 footer.site-footer a { color: var(--accent-2); }
+.footer-legal-links { margin-top: 8px; }
+.footer-dot { margin: 0 8px; opacity: 0.5; }
 
 /* ---------- Notification bell ---------- */
 .notif-trigger { position: relative; }

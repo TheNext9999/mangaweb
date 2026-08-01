@@ -1,0 +1,57 @@
+{% extends "reader/base.html" %}
+{% load static %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'reader/css/legal.css' %}">
+{% endblock %}
+{% block title %}Điều khoản sử dụng — MangaVerse{% endblock %}
+{% block content %}
+<section class="container legal-section">
+  <div class="legal-card reveal-up in-view">
+    <h1 class="legal-title"><i class="fa-solid fa-file-contract"></i> Điều khoản sử dụng</h1>
+    <p class="legal-updated">Áp dụng cho toàn bộ website MangaVerse.</p>
+
+    <nav class="legal-toc">
+      <a href="#chap-nhan">1. Chấp nhận điều khoản</a>
+      <a href="#mo-ta">2. Mô tả dịch vụ</a>
+      <a href="#tai-khoan">3. Tài khoản người dùng</a>
+      <a href="#thao-luan">4. Quy tắc tại mục Thảo luận</a>
+      <a href="#noi-dung-nguoi-dung">5. Nội dung do người dùng đăng tải</a>
+      <a href="#ban-quyen">6. Sở hữu trí tuệ &amp; bản quyền truyện</a>
+      <a href="#trach-nhiem">7. Giới hạn trách nhiệm</a>
+      <a href="#cham-dut">8. Chấm dứt tài khoản</a>
+      <a href="#thay-doi-dk">9. Thay đổi điều khoản</a>
+      <a href="#lien-he-dk">10. Liên hệ</a>
+    </nav>
+
+    <h2 id="chap-nhan">1. Chấp nhận điều khoản</h2>
+    <p>Khi truy cập và sử dụng MangaVerse, bạn đồng ý tuân thủ các điều khoản dưới đây. Nếu không đồng ý, vui lòng ngừng sử dụng trang.</p>
+
+    <h2 id="mo-ta">2. Mô tả dịch vụ</h2>
+    <p>MangaVerse là một trang tổng hợp, hiển thị dữ liệu truyện tranh (manga) lấy trực tiếp từ <a href="https://mangadex.org" target="_blank" rel="noopener">MangaDex API</a> công khai, đi kèm các tính năng cá nhân hoá: tài khoản, theo dõi, lịch sử đọc, thông báo chương mới, và mục Thảo luận cộng đồng. Chúng tôi không tự lưu trữ hay phát hành nội dung truyện.</p>
+
+    <h2 id="tai-khoan">3. Tài khoản người dùng</h2>
+    <p>Bạn chịu trách nhiệm bảo mật thông tin đăng nhập của mình và mọi hoạt động diễn ra dưới tài khoản đó. Vui lòng cung cấp thông tin chính xác khi đăng ký. Bạn cần đủ 13 tuổi trở lên để tạo tài khoản.</p>
+
+    <h2 id="thao-luan">4. Quy tắc tại mục Thảo luận</h2>
+    <p>Khi tham gia nhóm chat trong mục Thảo luận, bạn <strong>không được</strong> đăng: nội dung khiêu dâm hoặc liên quan đến xâm hại trẻ em dưới bất kỳ hình thức nào; nội dung kích động thù hận, bạo lực, phân biệt đối xử; thông tin sai sự thật gây hại; mã độc, liên kết lừa đảo; spam hoặc quảng cáo trái phép; nội dung vi phạm pháp luật hiện hành. Quản trị viên và chủ nhóm có quyền xoá tin nhắn vi phạm, khoá tài khoản vi phạm nhiều lần.</p>
+
+    <h2 id="noi-dung-nguoi-dung">5. Nội dung do người dùng đăng tải</h2>
+    <p>Bạn giữ quyền sở hữu đối với văn bản, hình ảnh, video bạn đăng tải trong mục Thảo luận. Bằng việc đăng tải, bạn cấp cho MangaVerse quyền hiển thị nội dung đó trong phạm vi vận hành trang. Bạn cam kết chỉ đăng nội dung mình có quyền chia sẻ, và chịu trách nhiệm hoàn toàn về nội dung mình đăng.</p>
+
+    <h2 id="ban-quyen">6. Sở hữu trí tuệ &amp; bản quyền truyện</h2>
+    <p>Toàn bộ nội dung truyện (tên, mô tả, hình ảnh, bản dịch) hiển thị trên MangaVerse thuộc bản quyền của tác giả gốc, nhà xuất bản và các nhóm dịch (scanlation group) tương ứng, được cung cấp qua MangaDex. MangaVerse không tuyên bố sở hữu bất kỳ nội dung truyện nào. Nếu bạn là chủ sở hữu bản quyền và có khiếu nại, vui lòng liên hệ trực tiếp <a href="https://mangadex.org" target="_blank" rel="noopener">MangaDex</a> — đơn vị lưu trữ và phát hành nội dung.</p>
+
+    <h2 id="trach-nhiem">7. Giới hạn trách nhiệm</h2>
+    <p>MangaVerse được cung cấp "nguyên trạng", không đảm bảo trang hoạt động liên tục không gián đoạn, không có lỗi, hay dữ liệu từ MangaDex luôn chính xác/đầy đủ. Chúng tôi không chịu trách nhiệm với nội dung do người dùng khác đăng tải hoặc nội dung từ các trang liên kết bên ngoài.</p>
+
+    <h2 id="cham-dut">8. Chấm dứt tài khoản</h2>
+    <p>Chúng tôi có quyền tạm khoá hoặc chấm dứt tài khoản vi phạm điều khoản này, đặc biệt là các vi phạm tại mục 4 liên quan đến nội dung đăng tải trong Thảo luận.</p>
+
+    <h2 id="thay-doi-dk">9. Thay đổi điều khoản</h2>
+    <p>Điều khoản có thể được cập nhật khi trang bổ sung tính năng mới. Phiên bản mới nhất luôn được đăng tại trang này; việc tiếp tục sử dụng trang sau khi điều khoản thay đổi đồng nghĩa bạn chấp nhận các thay đổi đó.</p>
+
+    <h2 id="lien-he-dk">10. Liên hệ</h2>
+    <p>Nếu có câu hỏi về điều khoản sử dụng này, vui lòng liên hệ qua trang quản trị viên của website.</p>
+  </div>
+</section>
+{% endblock %}

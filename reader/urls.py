@@ -19,6 +19,9 @@ urlpatterns = [
     path("ho-so/", views.profile, name="profile"),
     path("ho-so/sua/", views.profile_edit, name="profile_edit"),
 
+    path("chinh-sach-bao-mat/", views.privacy_policy, name="privacy_policy"),
+    path("dieu-khoan-su-dung/", views.terms_of_service, name="terms_of_service"),
+
     path("thao-luan/", views.discussion_list, name="discussion_list"),
     path("thao-luan/tao-nhom/", views.discussion_create, name="discussion_create"),
     path("thao-luan/<slug:slug>/", views.discussion_room, name="discussion_room"),
