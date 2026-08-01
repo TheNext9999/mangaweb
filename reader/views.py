@@ -8,7 +8,10 @@ from django.urls import reverse
 from urllib.parse import quote
 import json
 import re
+from urllib.parse import urlparse
 from django.utils.html import escape
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 from . import services
 from .services import MangaDexError, ORIGIN_COUNTRIES, PAGE_SIZE_OPTIONS
@@ -480,14 +483,68 @@ def save_settings(request):
     return redirect(next_url)
 
 
-def _linkify_hashtags(text):
-    """Wraps #hashtag words in a styled span with a link to filter this
-    room's messages by that tag — the 'hashtag qua lại' feature."""
-    def repl(m):
-        tag = m.group(1)
-        return f'<a href="?tag={tag}" class="chat-hashtag">#{tag}</a>'
-    escaped = escape(text)
-    return re.sub(r"#(\w+)", repl, escaped)
+_chat_url_validator = URLValidator(schemes=["http", "https"])
+_CHAT_TOKEN_RE = re.compile(r'(https?://[^\s<]+)|#(\w+)')
+_URL_TRAILING_PUNCT = ").,;:!?]}'\""
+
+
+def _shorten_url_for_display(url, max_len=45):
+    parsed = urlparse(url)
+    display = (parsed.netloc + parsed.path) or url
+    if parsed.query:
+        display += "?…"
+    if len(display) > max_len:
+        display = display[:max_len - 1] + "…"
+    return display
+
+
+def _render_url_card(raw_url):
+    """Validates a detected URL's format and, if it looks well-formed,
+    renders it as a rounded 'link card' with a shortened display and a
+    new-tab open icon. Malformed links are left as plain (escaped) text
+    instead of being turned into a clickable card."""
+    trailing = ""
+    while raw_url and raw_url[-1] in _URL_TRAILING_PUNCT:
+        trailing = raw_url[-1] + trailing
+        raw_url = raw_url[:-1]
+    if not raw_url:
+        return escape(trailing)
+
+    try:
+        _chat_url_validator(raw_url)
+    except DjangoValidationError:
+        return escape(raw_url) + escape(trailing)
+
+    safe_href = escape(raw_url)
+    safe_display = escape(_shorten_url_for_display(raw_url))
+    card = (
+        f'<a href="{safe_href}" target="_blank" rel="noopener noreferrer nofollow" class="chat-link-card">'
+        f'<i class="fa-solid fa-link"></i>'
+        f'<span class="chat-link-card-text">{safe_display}</span>'
+        f'<i class="fa-solid fa-arrow-up-right-from-square chat-link-card-icon"></i>'
+        f'</a>'
+    )
+    return card + escape(trailing)
+
+
+def _linkify_content(text):
+    """Renders message text with URLs turned into link-preview cards and
+    #hashtags turned into filter links — replaces the old hashtag-only
+    _linkify_content()."""
+    if not text:
+        return ""
+    result = []
+    last_end = 0
+    for m in _CHAT_TOKEN_RE.finditer(text):
+        result.append(escape(text[last_end:m.start()]))
+        if m.group(1):
+            result.append(_render_url_card(m.group(1)))
+        else:
+            tag = m.group(2)
+            result.append(f'<a href="?tag={escape(tag)}" class="chat-hashtag">#{escape(tag)}</a>')
+        last_end = m.end()
+    result.append(escape(text[last_end:]))
+    return "".join(result)
 
 
 def _is_group_moderator(user, group):
@@ -528,7 +585,7 @@ def discussion_message_edit(request, slug, message_id):
     msg.content = content
     msg.is_edited = True
     msg.save(update_fields=["content", "is_edited"])
-    return JsonResponse({"ok": True, "content_html": _linkify_hashtags(msg.content)})
+    return JsonResponse({"ok": True, "content_html": _linkify_content(msg.content)})
 
 
 @login_required
@@ -587,7 +644,7 @@ def discussion_room(request, slug):
         msgs = msgs.filter(content__icontains=f"#{tag}")
     msgs = list(msgs[:200])
     for m in msgs:
-        m.rendered_content = _linkify_hashtags(m.content) if m.content else ""
+        m.rendered_content = _linkify_content(m.content) if m.content else ""
         m.can_edit = request.user.is_authenticated and m.user_id == request.user.id
         m.can_delete = m.can_edit or is_moderator
 
@@ -639,7 +696,7 @@ def discussion_messages_poll(request, slug):
         results.append({
             "id": m.id,
             "username": m.user.username,
-            "content_html": _linkify_hashtags(m.content) if m.content else "",
+            "content_html": _linkify_content(m.content) if m.content else "",
             "image_url": m.image.url if m.image else None,
             "video_url": m.video.url if m.video else None,
             "created_at": m.created_at.strftime("%H:%M"),
