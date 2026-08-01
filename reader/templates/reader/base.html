@@ -55,20 +55,22 @@
               </form>
             {% endif %}
           </div>
-          {% for n in recent_notifications %}
-            <a href="{% url 'reader:notification_open' n.pk %}" class="notif-item {% if not n.is_read %}unread{% endif %}">
-              {% if n.cover_url %}<img src="{{ n.cover_url }}" alt="" class="notif-thumb">{% endif %}
-              <span class="notif-text">
-                <span class="notif-title">
-                  {% if n.flag %}<span class="fi fi-{{ n.flag }} notif-flag"></span>{% endif %}
-                  {{ n.manga_title }}
+          <div class="notif-dropdown-body">
+            {% for n in recent_notifications %}
+              <a href="{% url 'reader:notification_open' n.pk %}" class="notif-item {% if not n.is_read %}unread{% endif %}">
+                {% if n.cover_url %}<img src="{{ n.cover_url }}" alt="" class="notif-thumb">{% endif %}
+                <span class="notif-text">
+                  <span class="notif-title">
+                    {% if n.flag %}<span class="fi fi-{{ n.flag }} notif-flag"></span>{% endif %}
+                    {{ n.manga_title }}
+                  </span>
+                  <span class="notif-sub">Chương mới: {{ n.chapter_number }}</span>
                 </span>
-                <span class="notif-sub">Chương mới: {{ n.chapter_number }}</span>
-              </span>
-            </a>
-          {% empty %}
-            <p class="notif-empty">Chưa có thông báo nào. Theo dõi truyện để nhận tin chương mới.</p>
-          {% endfor %}
+              </a>
+            {% empty %}
+              <p class="notif-empty">Chưa có thông báo nào. Theo dõi truyện để nhận tin chương mới.</p>
+            {% endfor %}
+          </div>
           <a href="{% url 'reader:notifications' %}" class="notif-see-all">Xem tất cả thông báo</a>
         </div>
       </div>
