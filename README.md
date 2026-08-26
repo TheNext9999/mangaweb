@@ -12,6 +12,12 @@ Giao diện tối (dark theme), có hero section lớn kèu lưới bìa truyệ
 và hiệu ứng cuộn "bay lên từ dưới" (fade + slide-up) cho các thẻ truyện /
 mục khi chúng xuất hiện trong màn hình, dùng `IntersectionObserver`.
 
+Screenshots
+-------------
+<p align="center">
+  <img src="./reader/static/reader/img/Screenshot1.png" alt="Manga Verse" />
+</p>
+
 >Giao diện được tổng hợp và lấy ý tưởng từ:
 > - Dự án [TruyenDex](https://github.com/zennomi/truyendex) của bác [Zennomi](https://www.facebook.com/search/top?q=zennomi)
 > - [MangaDex](https://mangadex.org/)
