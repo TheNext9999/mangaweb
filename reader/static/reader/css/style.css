@@ -1843,6 +1843,128 @@ footer.site-footer a { color: var(--accent-2); }
 .chat-link-card-icon { flex-shrink: 0; font-size: 0.7rem; opacity: 0.7; }
 
 .chat-bubble-header { position: relative; }
+
+.chat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--badge-color, var(--accent-2));
+  background: color-mix(in srgb, var(--badge-color, var(--accent-2)) 18%, transparent);
+  border: 1px solid var(--badge-color, var(--accent-2));
+  white-space: nowrap;
+}
+.chat-badge-admin { --badge-color: #ff8a3d; }
+
+/* ---------- Admin panel ---------- */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+.admin-tab {
+  padding: 10px 16px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.admin-tab:hover { color: var(--text); }
+.admin-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+.admin-stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+}
+.admin-stat-number { display: block; font-size: 1.8rem; font-weight: 800; color: var(--accent-2); }
+.admin-stat-label { display: block; color: var(--text-dim); font-size: 0.82rem; margin-top: 6px; }
+
+.admin-user-list { display: flex; flex-direction: column; gap: 8px; }
+.admin-user-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  transition: border-color .15s, background .15s;
+}
+.admin-user-row:hover { border-color: var(--accent); background: var(--bg-elevated); }
+.admin-user-row.admin-user-banned { opacity: 0.6; }
+.admin-user-info { display: flex; flex-direction: column; gap: 4px; }
+.admin-user-name { display: flex; align-items: center; gap: 8px; font-weight: 700; flex-wrap: wrap; }
+.admin-user-meta { color: var(--text-dim); font-size: 0.8rem; }
+.admin-badge-banned {
+  background: rgba(255,138,138,0.15);
+  border: 1px solid #ff8a8a;
+  color: #ff8a8a;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+
+.admin-badge-list, .admin-badge-grant-list, .admin-badge-manage-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.admin-badge-remove {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  margin-left: 4px;
+  font-size: 0.75rem;
+}
+.admin-badge-grant-btn { cursor: pointer; border: 1px solid var(--badge-color, var(--accent-2)); background: none; font-family: inherit; }
+.admin-badge-grant-btn:hover { background: color-mix(in srgb, var(--badge-color, var(--accent-2)) 25%, transparent); }
+
+.admin-badge-manage-list { flex-direction: column; }
+.admin-badge-manage-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+.admin-badge-holder-count { color: var(--text-dim); font-size: 0.82rem; flex: 1; }
+
+.badge-create-form input[type="text"] {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+}
+.badge-create-form input[type="color"] {
+  width: 44px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+}
+.badge-create-form label { display: block; font-size: 0.8rem; color: var(--text-dim); margin: 10px 0 4px; }
 .chat-menu-wrap { position: relative; margin-left: auto; }
 .chat-menu-btn {
   background: none;

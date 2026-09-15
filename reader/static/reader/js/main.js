@@ -411,13 +411,26 @@ document.addEventListener("DOMContentLoaded", () => {
     return html;
   }
 
+  function buildBadgesHtml(m) {
+    let html = "";
+    if (m.is_staff) {
+      html += '<span class="chat-badge chat-badge-admin"><i class="fa-solid fa-shield"></i> Admin</span>';
+    }
+    if (m.badges && m.badges.length) {
+      m.badges.forEach((b) => {
+        html += `<span class="chat-badge" style="--badge-color: ${escapeHtml(b.color)};">${escapeHtml(b.icon)} ${escapeHtml(b.name)}</span>`;
+      });
+    }
+    return html;
+  }
+
   function appendMessage(m) {
     const div = document.createElement("div");
     div.className = "chat-message" + (m.is_me ? " chat-message-me" : "");
     div.dataset.msgId = m.id;
 
     let inner = `<span class="chat-avatar">${escapeHtml(m.username.charAt(0).toUpperCase())}</span><div class="chat-bubble">`;
-    inner += `<div class="chat-bubble-header"><span class="chat-username">${escapeHtml(m.username)}</span><span class="chat-time">${escapeHtml(m.created_at)}</span>${buildMenuHtml(m)}</div>`;
+    inner += `<div class="chat-bubble-header"><span class="chat-username">${escapeHtml(m.username)}</span>${buildBadgesHtml(m)}<span class="chat-time">${escapeHtml(m.created_at)}</span>${buildMenuHtml(m)}</div>`;
     if (m.content_html) inner += `<div class="chat-content">${m.content_html}</div>`;
     if (m.image_url) inner += `<img src="${escapeHtml(m.image_url)}" alt="" class="chat-media-img" loading="lazy">`;
     if (m.video_url) inner += `<video src="${escapeHtml(m.video_url)}" controls class="chat-media-video"></video>`;
