@@ -22,6 +22,12 @@ urlpatterns = [
     path("chinh-sach-bao-mat/", views.privacy_policy, name="privacy_policy"),
     path("dieu-khoan-su-dung/", views.terms_of_service, name="terms_of_service"),
 
+    path("admin-panel/", views.admin_panel_dashboard, name="admin_panel_dashboard"),
+    path("admin-panel/nguoi-dung/", views.admin_panel_users, name="admin_panel_users"),
+    path("admin-panel/nguoi-dung/<int:user_id>/", views.admin_panel_user_detail, name="admin_panel_user_detail"),
+    path("admin-panel/huy-hieu/", views.admin_panel_badges, name="admin_panel_badges"),
+    path("admin-panel/huy-hieu/<int:badge_id>/xoa/", views.admin_panel_badge_delete, name="admin_panel_badge_delete"),
+
     path("thao-luan/", views.discussion_list, name="discussion_list"),
     path("thao-luan/tao-nhom/", views.discussion_create, name="discussion_create"),
     path("thao-luan/<slug:slug>/", views.discussion_room, name="discussion_room"),

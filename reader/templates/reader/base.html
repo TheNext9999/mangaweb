@@ -111,6 +111,10 @@
           <a href="{% url 'reader:following' %}"><i class="fa-solid fa-bookmark"></i> Theo dõi</a>
           <a href="{% url 'reader:favorites' %}"><i class="fa-solid fa-heart"></i> Yêu thích</a>
           <a href="{% url 'reader:history' %}"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử</a>
+          {% if user.is_staff %}
+            <hr>
+            <a href="{% url 'reader:admin_panel_dashboard' %}"><i class="fa-solid fa-user-shield"></i> Admin Panel</a>
+          {% endif %}
           <hr>
           <a href="{% url 'account_logout' %}"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
         </div>
@@ -199,6 +203,9 @@
             {% if unread_notif_count > 0 %}<span class="notif-badge notif-badge-inline">{{ unread_notif_count }}</span>{% endif %}
           </a>
           <a href="{% url 'reader:profile' %}"><i class="fa-solid fa-user"></i> Hồ sơ ({{ user.username }})</a>
+          {% if user.is_staff %}
+            <a href="{% url 'reader:admin_panel_dashboard' %}"><i class="fa-solid fa-user-shield"></i> Admin Panel</a>
+          {% endif %}
           <a href="{% url 'account_logout' %}"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
         {% else %}
           <a href="{% url 'account_login' %}"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</a>

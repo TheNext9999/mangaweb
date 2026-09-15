@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.db.models import Count
@@ -15,8 +16,8 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 
 from . import services
 from .services import MangaDexError, ORIGIN_COUNTRIES, PAGE_SIZE_OPTIONS
-from .models import Bookmark, ReadingHistory, ReadChapter, Notification, DiscussionGroup, GroupMembership, GroupMessage
-from .forms import ProfileForm, GroupCreateForm, GroupMessageForm
+from .models import Bookmark, ReadingHistory, ReadChapter, Notification, DiscussionGroup, GroupMembership, GroupMessage, Badge, UserBadge
+from .forms import ProfileForm, GroupCreateForm, GroupMessageForm, BadgeForm
 
 
 def _origin_lang(request):
@@ -639,7 +640,7 @@ def discussion_room(request, slug):
     is_moderator = _is_group_moderator(request.user, group)
 
     tag = request.GET.get("tag", "").strip()
-    msgs = group.messages.select_related("user")
+    msgs = group.messages.select_related("user").prefetch_related("user__badges__badge")
     if tag:
         msgs = msgs.filter(content__icontains=f"#{tag}")
     msgs = list(msgs[:200])
@@ -647,6 +648,7 @@ def discussion_room(request, slug):
         m.rendered_content = _linkify_content(m.content) if m.content else ""
         m.can_edit = request.user.is_authenticated and m.user_id == request.user.id
         m.can_delete = m.can_edit or is_moderator
+        m.author_badges = [ub.badge for ub in m.user.badges.all()]
 
     pinned_msgs = [m for m in msgs if m.is_pinned]
 
@@ -689,7 +691,7 @@ def discussion_messages_poll(request, slug):
     except ValueError:
         after_id = 0
 
-    new_msgs = group.messages.select_related("user").filter(id__gt=after_id)[:50]
+    new_msgs = group.messages.select_related("user").prefetch_related("user__badges__badge").filter(id__gt=after_id)[:50]
     results = []
     for m in new_msgs:
         can_edit = request.user.is_authenticated and m.user_id == request.user.id
@@ -704,8 +706,192 @@ def discussion_messages_poll(request, slug):
             "can_edit": can_edit,
             "can_delete": can_edit or is_moderator,
             "is_pinned": m.is_pinned,
+            "is_staff": m.user.is_staff,
+            "badges": [{"name": ub.badge.name, "icon": ub.badge.icon, "color": ub.badge.color} for ub in m.user.badges.all()],
         })
     return JsonResponse({"messages": results})
+
+
+def admin_required(view_func):
+    """Only staff accounts (Django's is_staff) may access the admin panel."""
+    from functools import wraps
+
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not (request.user.is_authenticated and request.user.is_staff):
+            messages.error(request, "Bạn không có quyền truy cập trang quản trị.")
+            return redirect("reader:home")
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+@admin_required
+def admin_panel_dashboard(request):
+    stats = {
+        "user_count": User.objects.count(),
+        "staff_count": User.objects.filter(is_staff=True).count(),
+        "group_count": DiscussionGroup.objects.count(),
+        "message_count": GroupMessage.objects.count(),
+        "badge_count": Badge.objects.count(),
+        "banned_count": User.objects.filter(is_active=False).count(),
+    }
+    return render(request, "reader/admin_panel/dashboard.html", {"stats": stats})
+
+
+@admin_required
+def admin_panel_users(request):
+    query = request.GET.get("q", "").strip()
+    users = User.objects.all().order_by("-date_joined").prefetch_related("badges__badge")
+    if query:
+        users = users.filter(username__icontains=query)
+    return render(request, "reader/admin_panel/users.html", {"users": users, "query": query})
+
+
+@admin_required
+def admin_panel_user_detail(request, user_id):
+    target = get_object_or_404(User, pk=user_id)
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "toggle_active":
+            if target.id == request.user.id:
+                messages.error(request, "Bạn không thể tự khoá tài khoản của chính mình.")
+            else:
+                target.is_active = not target.is_active
+                target.save(update_fields=["is_active"])
+                messages.success(request, "Đã cập nhật trạng thái tài khoản.")
+        elif action == "add_badge":
+            badge = Badge.objects.filter(pk=request.POST.get("badge_id")).first()
+            if badge:
+                UserBadge.objects.get_or_create(user=target, badge=badge, defaults={"granted_by": request.user})
+                messages.success(request, f"Đã gắn huy hiệu “{badge.name}”.")
+        elif action == "remove_badge":
+            UserBadge.objects.filter(user=target, badge_id=request.POST.get("badge_id")).delete()
+            messages.success(request, "Đã gỡ huy hiệu.")
+        return redirect("reader:admin_panel_user_detail", user_id=target.id)
+
+    user_badges = UserBadge.objects.filter(user=target).select_related("badge")
+    owned_ids = set(user_badges.values_list("badge_id", flat=True))
+    available_badges = Badge.objects.exclude(id__in=owned_ids)
+
+    return render(request, "reader/admin_panel/user_detail.html", {
+        "target": target,
+        "user_badges": user_badges,
+        "available_badges": available_badges,
+    })
+
+
+@admin_required
+def admin_panel_badges(request):
+    if request.method == "POST":
+        form = BadgeForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Đã tạo huy hiệu mới.")
+            return redirect("reader:admin_panel_badges")
+    else:
+        form = BadgeForm()
+    badges = Badge.objects.all()
+    return render(request, "reader/admin_panel/badges.html", {"badges": badges, "form": form})
+
+
+@admin_required
+@require_POST
+def admin_panel_badge_delete(request, badge_id):
+    Badge.objects.filter(pk=badge_id).delete()
+    messages.success(request, "Đã xoá huy hiệu.")
+    return redirect("reader:admin_panel_badges")
+
+
+def admin_required(view_func):
+    """Only staff accounts (Django's is_staff) may access the admin panel."""
+    from functools import wraps
+
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not (request.user.is_authenticated and request.user.is_staff):
+            messages.error(request, "Bạn không có quyền truy cập trang quản trị.")
+            return redirect("reader:home")
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+@admin_required
+def admin_panel_dashboard(request):
+    stats = {
+        "user_count": User.objects.count(),
+        "staff_count": User.objects.filter(is_staff=True).count(),
+        "group_count": DiscussionGroup.objects.count(),
+        "message_count": GroupMessage.objects.count(),
+        "badge_count": Badge.objects.count(),
+        "banned_count": User.objects.filter(is_active=False).count(),
+    }
+    return render(request, "reader/admin_panel/dashboard.html", {"stats": stats})
+
+
+@admin_required
+def admin_panel_users(request):
+    query = request.GET.get("q", "").strip()
+    users = User.objects.all().order_by("-date_joined").prefetch_related("badges__badge")
+    if query:
+        users = users.filter(username__icontains=query)
+    return render(request, "reader/admin_panel/users.html", {"users": users, "query": query})
+
+
+@admin_required
+def admin_panel_user_detail(request, user_id):
+    target = get_object_or_404(User, pk=user_id)
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "toggle_active":
+            if target.id == request.user.id:
+                messages.error(request, "Bạn không thể tự khoá tài khoản của chính mình.")
+            else:
+                target.is_active = not target.is_active
+                target.save(update_fields=["is_active"])
+                messages.success(request, "Đã cập nhật trạng thái tài khoản.")
+        elif action == "add_badge":
+            badge = Badge.objects.filter(pk=request.POST.get("badge_id")).first()
+            if badge:
+                UserBadge.objects.get_or_create(user=target, badge=badge, defaults={"granted_by": request.user})
+                messages.success(request, f"Đã gắn huy hiệu “{badge.name}”.")
+        elif action == "remove_badge":
+            UserBadge.objects.filter(user=target, badge_id=request.POST.get("badge_id")).delete()
+            messages.success(request, "Đã gỡ huy hiệu.")
+        return redirect("reader:admin_panel_user_detail", user_id=target.id)
+
+    user_badges = UserBadge.objects.filter(user=target).select_related("badge")
+    owned_ids = set(user_badges.values_list("badge_id", flat=True))
+    available_badges = Badge.objects.exclude(id__in=owned_ids)
+
+    return render(request, "reader/admin_panel/user_detail.html", {
+        "target": target,
+        "user_badges": user_badges,
+        "available_badges": available_badges,
+    })
+
+
+@admin_required
+def admin_panel_badges(request):
+    if request.method == "POST":
+        form = BadgeForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Đã tạo huy hiệu mới.")
+            return redirect("reader:admin_panel_badges")
+    else:
+        form = BadgeForm()
+    badges = Badge.objects.all()
+    return render(request, "reader/admin_panel/badges.html", {"badges": badges, "form": form})
+
+
+@admin_required
+@require_POST
+def admin_panel_badge_delete(request, badge_id):
+    Badge.objects.filter(pk=badge_id).delete()
+    messages.success(request, "Đã xoá huy hiệu.")
+    return redirect("reader:admin_panel_badges")
 
 
 def privacy_policy(request):

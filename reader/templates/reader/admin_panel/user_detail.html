@@ -1,0 +1,76 @@
+{% extends "reader/base.html" %}
+{% block title %}{{ target.username }} — Admin Panel{% endblock %}
+{% block content %}
+<section class="container section">
+  <h1 class="section-title reveal-up in-view"><i class="fa-solid fa-user-shield"></i> Admin Panel</h1>
+
+  <div class="admin-tabs reveal-up">
+    <a href="{% url 'reader:admin_panel_dashboard' %}" class="admin-tab">Tổng quan</a>
+    <a href="{% url 'reader:admin_panel_users' %}" class="admin-tab active">Người dùng</a>
+    <a href="{% url 'reader:admin_panel_badges' %}" class="admin-tab">Huy hiệu</a>
+  </div>
+
+  <p><a href="{% url 'reader:admin_panel_users' %}">← Quay lại danh sách người dùng</a></p>
+
+  <div class="profile-header reveal-up">
+    <div class="profile-avatar">{{ target.username|first|upper }}</div>
+    <div class="profile-info">
+      <h2 class="profile-username">
+        {{ target.username }}
+        {% if target.is_staff %}<span class="chat-badge chat-badge-admin"><i class="fa-solid fa-shield"></i> Admin</span>{% endif %}
+        {% if not target.is_active %}<span class="admin-badge-banned">Đã khoá</span>{% endif %}
+      </h2>
+      <p class="profile-email">{{ target.email|default:"Chưa có email" }}</p>
+      <p class="profile-joined">Tham gia từ {{ target.date_joined|date:"d/m/Y" }}</p>
+      <div class="profile-actions">
+        {% if target.id != request.user.id %}
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle_active">
+            <button type="submit" class="btn {% if target.is_active %}btn-ghost{% else %}btn-primary{% endif %}">
+              {% if target.is_active %}<i class="fa-solid fa-user-slash"></i> Khoá tài khoản{% else %}<i class="fa-solid fa-user-check"></i> Mở khoá{% endif %}
+            </button>
+          </form>
+        {% else %}
+          <p class="tab-placeholder-note">Đây là tài khoản của chính bạn.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="adv-panel reveal-up">
+    <h3 class="adv-panel-title">Huy hiệu đang có</h3>
+    <div class="admin-badge-list">
+      {% for ub in user_badges %}
+        <span class="chat-badge" style="--badge-color: {{ ub.badge.color }};">
+          {{ ub.badge.icon }} {{ ub.badge.name }}
+          <form method="post" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="remove_badge">
+            <input type="hidden" name="badge_id" value="{{ ub.badge.id }}">
+            <button type="submit" class="admin-badge-remove" aria-label="Gỡ huy hiệu"><i class="fa-solid fa-xmark"></i></button>
+          </form>
+        </span>
+      {% empty %}
+        <p class="tab-placeholder-note">Chưa có huy hiệu nào.</p>
+      {% endfor %}
+    </div>
+
+    {% if available_badges %}
+      <h3 class="adv-panel-title" style="margin-top:20px;">Gắn huy hiệu mới</h3>
+      <div class="admin-badge-grant-list">
+        {% for b in available_badges %}
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_badge">
+            <input type="hidden" name="badge_id" value="{{ b.id }}">
+            <button type="submit" class="chat-badge admin-badge-grant-btn" style="--badge-color: {{ b.color }};">
+              {{ b.icon }} {{ b.name }} <i class="fa-solid fa-plus"></i>
+            </button>
+          </form>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

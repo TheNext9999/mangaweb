@@ -41,32 +41,6 @@ class Bookmark(models.Model):
         return f"{self.user} {self.kind} {self.manga_title}"
 
 
-class DiscussionGroup(models.Model):
-    """A public discussion/chat group, like a Discord channel."""
-    name = models.CharField(max_length=120)
-    description = models.CharField(max_length=255, blank=True)
-    slug = models.SlugField(max_length=140, unique=True, blank=True)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="created_groups")
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["-created_at"]
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            base = slugify(self.name)[:120] or "nhom"
-            slug = base
-            i = 1
-            while DiscussionGroup.objects.filter(slug=slug).exists():
-                i += 1
-                slug = f"{base}-{i}"
-            self.slug = slug
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
-
-
 class Notification(models.Model):
     """A 'this followed manga has a new chapter' alert for one user."""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications")
@@ -84,6 +58,36 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.user} — {self.manga_title} ch.{self.chapter_number}"
+
+
+class Badge(models.Model):
+    """A custom badge (Mod, VIP, Fan cứng, ...) admins can grant to users —
+    shown next to their name in Thảo luận messages."""
+    name = models.CharField(max_length=40, unique=True)
+    icon = models.CharField(max_length=10, blank=True, help_text="1 emoji, ví dụ 🛡️")
+    color = models.CharField(max_length=7, default="#7c6bf2", help_text="Mã màu hex, ví dụ #7c6bf2")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class UserBadge(models.Model):
+    """One badge granted to one user, by an admin."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="badges")
+    badge = models.ForeignKey(Badge, on_delete=models.CASCADE, related_name="holders")
+    granted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="badges_granted")
+    granted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "badge")
+        ordering = ["-granted_at"]
+
+    def __str__(self):
+        return f"{self.user} — {self.badge}"
 
 
 class DiscussionGroup(models.Model):

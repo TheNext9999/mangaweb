@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Bookmark, ReadingHistory, ReadChapter, Notification, DiscussionGroup, GroupMembership, GroupMessage
+from .models import Bookmark, ReadingHistory, ReadChapter, Notification, DiscussionGroup, GroupMembership, GroupMessage, Badge, UserBadge
 
 
 @admin.register(Bookmark)
@@ -43,3 +43,14 @@ class GroupMembershipAdmin(admin.ModelAdmin):
 class GroupMessageAdmin(admin.ModelAdmin):
     list_display = ("user", "group", "created_at")
     search_fields = ("content", "user__username", "group__name")
+
+
+@admin.register(Badge)
+class BadgeAdmin(admin.ModelAdmin):
+    list_display = ("name", "icon", "color", "created_at")
+
+
+@admin.register(UserBadge)
+class UserBadgeAdmin(admin.ModelAdmin):
+    list_display = ("user", "badge", "granted_by", "granted_at")
+    search_fields = ("user__username", "badge__name")

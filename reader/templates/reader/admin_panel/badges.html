@@ -1,0 +1,37 @@
+{% extends "reader/base.html" %}
+{% block title %}Quản lý huy hiệu — Admin Panel{% endblock %}
+{% block content %}
+<section class="container section">
+  <h1 class="section-title reveal-up in-view"><i class="fa-solid fa-user-shield"></i> Admin Panel</h1>
+
+  <div class="admin-tabs reveal-up">
+    <a href="{% url 'reader:admin_panel_dashboard' %}" class="admin-tab">Tổng quan</a>
+    <a href="{% url 'reader:admin_panel_users' %}" class="admin-tab">Người dùng</a>
+    <a href="{% url 'reader:admin_panel_badges' %}" class="admin-tab active">Huy hiệu</a>
+  </div>
+
+  <div class="adv-panel reveal-up" style="margin-bottom: 24px;">
+    <h3 class="adv-panel-title">Tạo huy hiệu mới</h3>
+    <form method="post" class="badge-create-form">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Tạo huy hiệu</button>
+    </form>
+  </div>
+
+  <div class="admin-badge-manage-list">
+    {% for b in badges %}
+      <div class="admin-badge-manage-row">
+        <span class="chat-badge" style="--badge-color: {{ b.color }};">{{ b.icon }} {{ b.name }}</span>
+        <span class="admin-badge-holder-count">{{ b.holders.count }} người đang có</span>
+        <form method="post" action="{% url 'reader:admin_panel_badge_delete' b.id %}" onsubmit="return confirm('Xoá huy hiệu này? Mọi người đang có huy hiệu này sẽ mất nó.');">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-ghost"><i class="fa-solid fa-trash"></i> Xoá</button>
+        </form>
+      </div>
+    {% empty %}
+      <p>Chưa có huy hiệu nào — tạo huy hiệu đầu tiên ở trên.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

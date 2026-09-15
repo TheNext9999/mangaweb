@@ -1,0 +1,39 @@
+{% extends "reader/base.html" %}
+{% block title %}Quản lý người dùng — Admin Panel{% endblock %}
+{% block content %}
+<section class="container section">
+  <h1 class="section-title reveal-up in-view"><i class="fa-solid fa-user-shield"></i> Admin Panel</h1>
+
+  <div class="admin-tabs reveal-up">
+    <a href="{% url 'reader:admin_panel_dashboard' %}" class="admin-tab">Tổng quan</a>
+    <a href="{% url 'reader:admin_panel_users' %}" class="admin-tab active">Người dùng</a>
+    <a href="{% url 'reader:admin_panel_badges' %}" class="admin-tab">Huy hiệu</a>
+  </div>
+
+  <form method="get" class="adv-row" style="margin-bottom:20px;">
+    <input type="text" name="q" value="{{ query }}" placeholder="Tìm theo username..." class="adv-title-input">
+    <button type="submit" class="btn btn-ghost"><i class="fa-solid fa-magnifying-glass"></i> Tìm</button>
+  </form>
+
+  <div class="admin-user-list">
+    {% for u in users %}
+      <a href="{% url 'reader:admin_panel_user_detail' u.id %}" class="admin-user-row {% if not u.is_active %}admin-user-banned{% endif %}">
+        <span class="chat-avatar">{{ u.username|first|upper }}</span>
+        <span class="admin-user-info">
+          <span class="admin-user-name">
+            {{ u.username }}
+            {% if u.is_staff %}<span class="chat-badge chat-badge-admin"><i class="fa-solid fa-shield"></i> Admin</span>{% endif %}
+            {% for ub in u.badges.all %}
+              <span class="chat-badge" style="--badge-color: {{ ub.badge.color }};">{{ ub.badge.icon }} {{ ub.badge.name }}</span>
+            {% endfor %}
+            {% if not u.is_active %}<span class="admin-badge-banned">Đã khoá</span>{% endif %}
+          </span>
+          <span class="admin-user-meta">{{ u.email|default:"Chưa có email" }} · Tham gia {{ u.date_joined|date:"d/m/Y" }}</span>
+        </span>
+      </a>
+    {% empty %}
+      <p>Không tìm thấy người dùng nào.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

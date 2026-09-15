@@ -1,0 +1,40 @@
+{% extends "reader/base.html" %}
+{% block title %}Admin Panel — MangaVerse{% endblock %}
+{% block content %}
+<section class="container section">
+  <h1 class="section-title reveal-up in-view"><i class="fa-solid fa-user-shield"></i> Admin Panel</h1>
+
+  <div class="admin-tabs reveal-up">
+    <a href="{% url 'reader:admin_panel_dashboard' %}" class="admin-tab active">Tổng quan</a>
+    <a href="{% url 'reader:admin_panel_users' %}" class="admin-tab">Người dùng</a>
+    <a href="{% url 'reader:admin_panel_badges' %}" class="admin-tab">Huy hiệu</a>
+  </div>
+
+  <div class="admin-stats-grid">
+    <div class="admin-stat-card">
+      <span class="admin-stat-number">{{ stats.user_count }}</span>
+      <span class="admin-stat-label"><i class="fa-solid fa-users"></i> Tổng người dùng</span>
+    </div>
+    <div class="admin-stat-card">
+      <span class="admin-stat-number">{{ stats.staff_count }}</span>
+      <span class="admin-stat-label"><i class="fa-solid fa-user-shield"></i> Quản trị viên</span>
+    </div>
+    <div class="admin-stat-card">
+      <span class="admin-stat-number">{{ stats.banned_count }}</span>
+      <span class="admin-stat-label"><i class="fa-solid fa-user-slash"></i> Đã khoá</span>
+    </div>
+    <div class="admin-stat-card">
+      <span class="admin-stat-number">{{ stats.group_count }}</span>
+      <span class="admin-stat-label"><i class="fa-solid fa-comments"></i> Nhóm thảo luận</span>
+    </div>
+    <div class="admin-stat-card">
+      <span class="admin-stat-number">{{ stats.message_count }}</span>
+      <span class="admin-stat-label"><i class="fa-solid fa-comment"></i> Tin nhắn</span>
+    </div>
+    <div class="admin-stat-card">
+      <span class="admin-stat-number">{{ stats.badge_count }}</span>
+      <span class="admin-stat-label"><i class="fa-solid fa-award"></i> Huy hiệu</span>
+    </div>
+  </div>
+</section>
+{% endblock %}

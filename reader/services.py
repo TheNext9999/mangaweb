@@ -17,7 +17,14 @@ DEFAULT_HEADERS = {
     "User-Agent": "MangaWebDjangoDemo/1.0 (+https://mangadex.org)"
 }
 
-SAFE_CONTENT_RATINGS = ["safe", "suggestive"]
+# Chế độ nội dung MangaDex cho phép lọc manga theo mức độ gợi cảm/18+ hay không. MangaDex's own API docs:
+# https://api.mangadex.org/docs.html#section/Content-Rating-Filter
+SAFE_CONTENT_RATINGS = [
+    "safe",
+    "suggestive",
+    "erotica",
+    "pornographic",
+]
 
 # Countries/origin languages commonly published on MangaDex, used for the
 # navbar "Cài đặt → Quốc gia" filter. "all" means no originalLanguage

@@ -37,6 +37,10 @@
         <div class="chat-bubble">
           <div class="chat-bubble-header">
             <span class="chat-username">{{ m.user.username }}</span>
+            {% if m.user.is_staff %}<span class="chat-badge chat-badge-admin"><i class="fa-solid fa-shield"></i> Admin</span>{% endif %}
+            {% for b in m.author_badges %}
+              <span class="chat-badge" style="--badge-color: {{ b.color }};">{{ b.icon }} {{ b.name }}</span>
+            {% endfor %}
             <span class="chat-time">{{ m.created_at|date:"H:i" }}{% if m.is_edited %} · đã sửa{% endif %}</span>
             {% if m.can_edit or m.can_delete %}
               <span class="chat-menu-wrap">

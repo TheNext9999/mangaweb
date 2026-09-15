@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 
-from .models import DiscussionGroup, GroupMessage
+from .models import DiscussionGroup, GroupMessage, Badge
 
 
 class ProfileForm(forms.ModelForm):
@@ -56,3 +56,12 @@ class GroupMessageForm(forms.ModelForm):
         if not cleaned.get("content") and not cleaned.get("image") and not cleaned.get("video"):
             raise forms.ValidationError("Tin nhắn cần có nội dung, ảnh hoặc video.")
         return cleaned
+
+
+class BadgeForm(forms.ModelForm):
+    class Meta:
+        model = Badge
+        fields = ["name", "icon", "color"]
+        widgets = {
+            "color": forms.TextInput(attrs={"type": "color"}),
+        }
