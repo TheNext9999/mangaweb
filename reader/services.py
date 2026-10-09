@@ -17,14 +17,7 @@ DEFAULT_HEADERS = {
     "User-Agent": "MangaWebDjangoDemo/1.0 (+https://mangadex.org)"
 }
 
-# Chế độ nội dung MangaDex cho phép lọc manga theo mức độ gợi cảm/18+ hay không. MangaDex's own API docs:
-# https://api.mangadex.org/docs.html#section/Content-Rating-Filter
-SAFE_CONTENT_RATINGS = [
-    "safe",
-    "suggestive",
-    "erotica",
-    "pornographic",
-]
+SAFE_CONTENT_RATINGS = ["safe", "suggestive"]
 
 # Countries/origin languages commonly published on MangaDex, used for the
 # navbar "Cài đặt → Quốc gia" filter. "all" means no originalLanguage
@@ -574,6 +567,38 @@ SORT_FIELD_MAP = {
 }
 
 
+def search_authors(query, limit=8):
+    """Look up authors/artists by name (MangaDex 'author' resources cover
+    both roles) for the Author/Artist typeahead in advanced search."""
+    query = (query or "").strip()
+    if len(query) < 2:
+        return []
+    data = _get("/author", params={"name": query, "limit": limit})
+    return [
+        {"id": item.get("id"), "name": (item.get("attributes") or {}).get("name", "?")}
+        for item in data.get("data", [])
+    ]
+
+
+def get_author_name(author_id):
+    """Resolve an author id to a display name (cached) so the chosen
+    author is shown again after the form is submitted."""
+    if not author_id:
+        return None
+    cache_key = f"mdx:author:{author_id}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+    try:
+        data = _get(f"/author/{author_id}")
+    except MangaDexError:
+        return None
+    name = ((data.get("data") or {}).get("attributes") or {}).get("name")
+    if name:
+        cache.set(cache_key, name, CACHE_TTL * 12)
+    return name
+
+
 def advanced_search(filters, limit=24, offset=0):
     """Full-filter manga search: title, status, demographic, content
     rating, included/excluded tags (with AND/OR mode), and sort order —
@@ -590,7 +615,17 @@ def advanced_search(filters, limit=24, offset=0):
         params["status[]"] = filters["statuses"]
     if filters.get("demographics"):
         params["publicationDemographic[]"] = filters["demographics"]
-    params["contentRating[]"] = filters.get("content_ratings") or SAFE_CONTENT_RATINGS
+    ratings = [r for r in (filters.get("content_ratings") or []) if r in SAFE_CONTENT_RATINGS]
+    params["contentRating[]"] = ratings or SAFE_CONTENT_RATINGS
+    author_id = filters.get("author_id")
+    if author_id:
+        role = filters.get("author_role") or "any"
+        if role == "author":
+            params["authors[]"] = [author_id]
+        elif role == "artist":
+            params["artists[]"] = [author_id]
+        else:
+            params["authorOrArtist"] = author_id
     if filters.get("included_tags"):
         params["includedTags[]"] = filters["included_tags"]
         params["includedTagsMode"] = filters.get("included_mode") or "AND"

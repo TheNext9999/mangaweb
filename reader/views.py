@@ -179,6 +179,15 @@ SORT_OPTIONS = [
 ]
 
 
+def author_suggest(request):
+    """JSON typeahead for the Author/Artist filter."""
+    q = request.GET.get("q", "").strip()
+    try:
+        return JsonResponse({"results": services.search_authors(q)})
+    except MangaDexError:
+        return JsonResponse({"results": []})
+
+
 def advanced_search(request):
     error = None
     tags = []
@@ -193,7 +202,14 @@ def advanced_search(request):
     title = request.GET.get("title", "").strip()
     statuses = request.GET.getlist("status")
     demographics = request.GET.getlist("demographic")
-    content_ratings = request.GET.getlist("content_rating") or ["safe", "suggestive"]
+    content_ratings = [r for r in request.GET.getlist("content_rating") if r in ("safe", "suggestive")] or ["safe", "suggestive"]
+    author_id = request.GET.get("author_id", "").strip()
+    author_role = request.GET.get("author_role", "any")
+    if author_role not in ("any", "author", "artist"):
+        author_role = "any"
+    author_name = services.get_author_name(author_id) if author_id else None
+    if not author_name:
+        author_id = ""
     included_tags = request.GET.getlist("include_tag")
     excluded_tags = request.GET.getlist("exclude_tag")
     included_mode = request.GET.get("include_mode", "AND")
@@ -206,7 +222,7 @@ def advanced_search(request):
     except ValueError:
         page = 1
 
-    has_filters = bool(title or statuses or demographics or included_tags or excluded_tags)
+    has_filters = bool(title or statuses or demographics or included_tags or excluded_tags or author_id)
     results, total_pages = [], 1
 
     if has_filters:
@@ -216,6 +232,8 @@ def advanced_search(request):
                 "statuses": statuses,
                 "demographics": demographics,
                 "content_ratings": content_ratings,
+                "author_id": author_id,
+                "author_role": author_role,
                 "included_tags": included_tags,
                 "excluded_tags": excluded_tags,
                 "included_mode": included_mode,
@@ -244,6 +262,9 @@ def advanced_search(request):
         "selected_statuses": statuses,
         "selected_demographics": demographics,
         "selected_content_ratings": content_ratings,
+        "author_id": author_id,
+        "author_name": author_name or "",
+        "author_role": author_role,
         "included_tags": included_tags,
         "excluded_tags": excluded_tags,
         "included_mode": included_mode,
