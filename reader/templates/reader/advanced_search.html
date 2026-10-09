@@ -39,17 +39,47 @@
       </div>
     </div>
 
-    <div class="adv-panel">
-      <h3 class="adv-panel-title">Nội dung</h3>
-      <div class="adv-checkbox-list">
-        <label class="adv-checkbox">
-          <input type="checkbox" name="content_rating" value="safe" {% if "safe" in selected_content_ratings %}checked{% endif %}>
-          An toàn
-        </label>
-        <label class="adv-checkbox">
-          <input type="checkbox" name="content_rating" value="suggestive" {% if "suggestive" in selected_content_ratings %}checked{% endif %}>
-          Gợi cảm
-        </label>
+    <div class="adv-panel adv-panel-grid">
+      <div class="adv-field">
+        <h3 class="adv-panel-title">Độ tuổi nội dung</h3>
+        <div class="adv-dropdown" id="ratingDropdown">
+          <button type="button" class="adv-dropdown-btn" aria-haspopup="true" aria-expanded="false">
+            <span class="adv-dropdown-label" id="ratingLabel">Chọn</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="adv-dropdown-menu">
+            <label class="adv-dropdown-item">
+              <input type="checkbox" name="content_rating" value="safe" {% if "safe" in selected_content_ratings %}checked{% endif %}> Safe
+            </label>
+            <label class="adv-dropdown-item">
+              <input type="checkbox" name="content_rating" value="suggestive" {% if "suggestive" in selected_content_ratings %}checked{% endif %}> Suggestive
+            </label>
+            <label class="adv-dropdown-item adv-dropdown-disabled" title="Không khả dụng trên MangaVerse">
+              <input type="checkbox" disabled> Erotica
+            </label>
+            <label class="adv-dropdown-item adv-dropdown-disabled" title="Không khả dụng trên MangaVerse">
+              <input type="checkbox" disabled> Pornographic
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="adv-field">
+        <h3 class="adv-panel-title">Tác giả / Hoạ sĩ</h3>
+        <div class="adv-author-row">
+          <select name="author_role" class="adv-author-role">
+            <option value="any" {% if author_role == "any" %}selected{% endif %}>Bất kỳ</option>
+            <option value="author" {% if author_role == "author" %}selected{% endif %}>Tác giả</option>
+            <option value="artist" {% if author_role == "artist" %}selected{% endif %}>Hoạ sĩ</option>
+          </select>
+          <div class="adv-author-box">
+            <input type="text" id="authorInput" class="adv-author-input" placeholder="Tìm tác giả hoặc hoạ sĩ..." autocomplete="off"
+                   value="{{ author_name }}" data-suggest-url="{% url 'reader:author_suggest' %}">
+            <input type="hidden" name="author_id" id="authorId" value="{{ author_id }}">
+            <button type="button" class="adv-author-clear" id="authorClear" aria-label="Xoá" {% if not author_id %}hidden{% endif %}><i class="fa-solid fa-xmark"></i></button>
+            <ul class="adv-author-results" id="authorResults"></ul>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -121,8 +151,8 @@
     </div>
     {% include "reader/_pagination.html" with pagination_query_prefix=query_prefix %}
   {% else %}
-    <p class="adv-empty-hint">Chọn ít nhất 1 bộ lọc (tên truyện, trạng thái, đối tượng, hoặc thể loại) rồi bấm "Tìm kiếm".</p>
+    <p class="adv-empty-hint">Chọn ít nhất 1 bộ lọc (tên truyện, tác giả, trạng thái, đối tượng, hoặc thể loại) rồi bấm "Tìm kiếm".</p>
   {% endif %}
 </section>
 
-{% endblock %}
+{% endblock %}  

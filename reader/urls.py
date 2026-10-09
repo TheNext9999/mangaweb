@@ -8,6 +8,7 @@ urlpatterns = [
     path("hot/", views.hot, name="hot"),
     path("tim-kiem/", views.search, name="search"),
     path("api/tim-kiem-goi-y/", views.search_suggest, name="search_suggest"),
+    path("api/tac-gia-goi-y/", views.author_suggest, name="author_suggest"),
     path("tim-kiem-nang-cao/", views.advanced_search, name="advanced_search"),
     path("the-loai/", views.genre_list, name="genre_list"),
     path("the-loai/<str:tag_id>/", views.genre_detail, name="genre_detail"),
