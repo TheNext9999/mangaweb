@@ -54,11 +54,11 @@
             <label class="adv-dropdown-item">
               <input type="checkbox" name="content_rating" value="suggestive" {% if "suggestive" in selected_content_ratings %}checked{% endif %}> Suggestive
             </label>
-            <label class="adv-dropdown-item adv-dropdown-disabled" title="Không khả dụng trên MangaVerse">
-              <input type="checkbox" disabled> Erotica
+            <label class="adv-dropdown-item">
+              <input type="checkbox" name="content_rating" value="erotica" {% if "erotica" in selected_content_ratings %}checked{% endif %}> Erotica
             </label>
-            <label class="adv-dropdown-item adv-dropdown-disabled" title="Không khả dụng trên MangaVerse">
-              <input type="checkbox" disabled> Pornographic
+            <label class="adv-dropdown-item">
+              <input type="checkbox" name="content_rating" value="pornographic" {% if "pornographic" in selected_content_ratings %}checked{% endif %}> Pornographic
             </label>
           </div>
         </div>

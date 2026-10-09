@@ -18,6 +18,7 @@ DEFAULT_HEADERS = {
 }
 
 SAFE_CONTENT_RATINGS = ["safe", "suggestive"]
+ALLOWED_CONTENT_RATINGS = SAFE_CONTENT_RATINGS + ["erotica", "pornographic"]
 
 # Countries/origin languages commonly published on MangaDex, used for the
 # navbar "Cài đặt → Quốc gia" filter. "all" means no originalLanguage
@@ -615,7 +616,7 @@ def advanced_search(filters, limit=24, offset=0):
         params["status[]"] = filters["statuses"]
     if filters.get("demographics"):
         params["publicationDemographic[]"] = filters["demographics"]
-    ratings = [r for r in (filters.get("content_ratings") or []) if r in SAFE_CONTENT_RATINGS]
+    ratings = [r for r in (filters.get("content_ratings") or []) if r in ALLOWED_CONTENT_RATINGS]
     params["contentRating[]"] = ratings or SAFE_CONTENT_RATINGS
     author_id = filters.get("author_id")
     if author_id:

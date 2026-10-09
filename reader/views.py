@@ -202,7 +202,10 @@ def advanced_search(request):
     title = request.GET.get("title", "").strip()
     statuses = request.GET.getlist("status")
     demographics = request.GET.getlist("demographic")
-    content_ratings = [r for r in request.GET.getlist("content_rating") if r in ("safe", "suggestive")] or ["safe", "suggestive"]
+    content_ratings = [
+        rating for rating in request.GET.getlist("content_rating")
+        if rating in services.ALLOWED_CONTENT_RATINGS
+    ] or services.SAFE_CONTENT_RATINGS
     author_id = request.GET.get("author_id", "").strip()
     author_role = request.GET.get("author_role", "any")
     if author_role not in ("any", "author", "artist"):
