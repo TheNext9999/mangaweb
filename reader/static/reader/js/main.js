@@ -939,3 +939,70 @@ document.addEventListener("DOMContentLoaded", () => {
     moreDropdown && moreDropdown.classList.remove("open");
   });
 });
+
+/* ---- Advanced search: rating dropdown + author typeahead ---- */
+(function () {
+  const dd = document.getElementById("ratingDropdown");
+  if (dd) {
+    const btn = dd.querySelector(".adv-dropdown-btn");
+    const label = document.getElementById("ratingLabel");
+    const boxes = dd.querySelectorAll('input[name="content_rating"]');
+    const names = { safe: "Safe", suggestive: "Suggestive" };
+    const update = () => {
+      const on = [...boxes].filter((b) => b.checked);
+      label.textContent = on.length === 0 ? "Chọn" : `${names[on[0].value]} [${on.length}]`;
+    };
+    btn.addEventListener("click", () => {
+      const open = dd.classList.toggle("open");
+      btn.setAttribute("aria-expanded", open);
+    });
+    document.addEventListener("click", (e) => { if (!dd.contains(e.target)) dd.classList.remove("open"); });
+    boxes.forEach((b) => b.addEventListener("change", update));
+    update();
+  }
+
+  const input = document.getElementById("authorInput");
+  if (!input) return;
+  const hidden = document.getElementById("authorId");
+  const list = document.getElementById("authorResults");
+  const clear = document.getElementById("authorClear");
+  let timer = null, seq = 0;
+
+  const close = () => list.classList.remove("open");
+  const choose = (a) => {
+    input.value = a.name; hidden.value = a.id; clear.hidden = false; close();
+  };
+  clear.addEventListener("click", () => {
+    input.value = ""; hidden.value = ""; clear.hidden = true; close(); input.focus();
+  });
+  input.addEventListener("input", () => {
+    hidden.value = ""; clear.hidden = !input.value;
+    clearTimeout(timer);
+    const q = input.value.trim();
+    if (q.length < 2) { close(); return; }
+    timer = setTimeout(async () => {
+      const mine = ++seq;
+      try {
+        const r = await fetch(`${input.dataset.suggestUrl}?q=${encodeURIComponent(q)}`);
+        const data = await r.json();
+        if (mine !== seq) return;
+        list.innerHTML = "";
+        if (!data.results.length) {
+          const li = document.createElement("li"); li.className = "empty"; li.textContent = "Không tìm thấy";
+          list.appendChild(li);
+        }
+        data.results.forEach((a) => {
+          const li = document.createElement("li");
+          li.textContent = a.name;
+          li.addEventListener("mousedown", (e) => { e.preventDefault(); choose(a); });
+          list.appendChild(li);
+        });
+        list.classList.add("open");
+      } catch (e) { close(); }
+    }, 300);
+  });
+  input.addEventListener("blur", () => setTimeout(close, 150));
+  document.getElementById("advSearchForm").addEventListener("submit", () => {
+    if (input.value.trim() && !hidden.value) input.value = "";
+  });
+})();

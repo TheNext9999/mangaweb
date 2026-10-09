@@ -2305,3 +2305,26 @@ footer.site-footer a { color: var(--accent-2); }
   .manga-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
   .reader-toolbar { left: 50%; width: calc(100% - 24px); justify-content: space-between; }
 }
+
+/* ---- Advanced search: content rating dropdown + author/artist ---- */
+.adv-panel-grid{display:grid;grid-template-columns:1fr 2fr;gap:20px}
+@media(max-width:700px){.adv-panel-grid{grid-template-columns:1fr}}
+.adv-dropdown,.adv-author-box{position:relative}
+.adv-dropdown-btn{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;border:1px solid var(--border,#3a3a45);background:var(--card-bg,#1f1f27);color:inherit;cursor:pointer;font:inherit}
+.adv-dropdown-menu{display:none;position:absolute;z-index:30;left:0;right:0;top:calc(100% + 4px);padding:6px;border-radius:8px;border:1px solid var(--border,#3a3a45);background:var(--card-bg,#1f1f27);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.adv-dropdown.open .adv-dropdown-menu{display:block}
+.adv-dropdown.open .adv-dropdown-btn i{transform:rotate(180deg)}
+.adv-dropdown-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;cursor:pointer}
+.adv-dropdown-item:hover{background:rgba(255,255,255,.07)}
+.adv-dropdown-disabled{opacity:.45;cursor:not-allowed}
+.adv-author-row{display:flex;gap:10px;align-items:stretch}
+.adv-author-role{min-width:110px;padding:10px;border-radius:8px;border:1px solid var(--border,#3a3a45);background:var(--card-bg,#1f1f27);color:inherit;font:inherit}
+.adv-author-box{flex:1}
+.adv-author-input{width:100%;padding:10px 34px 10px 12px;border-radius:8px;border:1px solid var(--border,#3a3a45);background:var(--card-bg,#1f1f27);color:inherit;font:inherit;box-sizing:border-box}
+.adv-author-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:0;color:inherit;cursor:pointer;opacity:.7}
+.adv-author-clear[hidden]{display:none}
+.adv-author-results{display:none;list-style:none;margin:4px 0 0;padding:6px;position:absolute;z-index:30;left:0;right:0;border-radius:8px;border:1px solid var(--border,#3a3a45);background:var(--card-bg,#1f1f27);box-shadow:0 8px 24px rgba(0,0,0,.35);max-height:240px;overflow-y:auto}
+.adv-author-results.open{display:block}
+.adv-author-results li{padding:8px 10px;border-radius:6px;cursor:pointer}
+.adv-author-results li:hover{background:rgba(255,255,255,.07)}
+.adv-author-results li.empty{opacity:.6;cursor:default}
