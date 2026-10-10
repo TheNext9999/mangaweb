@@ -2328,3 +2328,7 @@ footer.site-footer a { color: var(--accent-2); }
 .adv-author-results li{padding:8px 10px;border-radius:6px;cursor:pointer}
 .adv-author-results li:hover{background:rgba(255,255,255,.07)}
 .adv-author-results li.empty{opacity:.6;cursor:default}
+
+/* Unread chapters: faint outline eye (not a slashed eye, which looked like "read") */
+.chapter-eye-unread,
+.chapter-group-eye .chapter-eye-unread { color: var(--text-dim) !important; opacity: 0.35 !important; }

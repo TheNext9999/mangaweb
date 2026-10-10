@@ -189,7 +189,7 @@
                       {% for c in cg.entries %}
                         <a href="{% url 'reader:chapter_read' manga.id c.id %}" class="chapter-entry-row index-entry-row {% if c.id in read_chapter_ids %}is-read{% endif %}">
                           <span class="chapter-entry-eye">
-                            {% if c.id in read_chapter_ids %}<i class="fa-solid fa-eye"></i>{% else %}<i class="fa-solid fa-eye-slash"></i>{% endif %}
+                            {% if c.id in read_chapter_ids %}<i class="fa-solid fa-eye"></i>{% else %}<i class="fa-regular fa-eye chapter-eye-unread"></i>{% endif %}
                           </span>
                           <span class="chapter-entry-flag fi fi-{{ c.flag }}" title="{{ c.language }}"></span>
                           <span class="chapter-entry-main">
@@ -220,7 +220,7 @@
         <details class="chapter-group-block reveal-up" open>
           <summary class="chapter-group-header">
             <span class="chapter-group-eye">
-              {% if group.all_read %}<i class="fa-solid fa-eye"></i>{% elif group.any_read %}<i class="fa-solid fa-eye chapter-group-eye-partial"></i>{% else %}<i class="fa-solid fa-eye-slash"></i>{% endif %}
+              {% if group.all_read %}<i class="fa-solid fa-eye"></i>{% elif group.any_read %}<i class="fa-solid fa-eye chapter-group-eye-partial"></i>{% else %}<i class="fa-regular fa-eye chapter-eye-unread"></i>{% endif %}
             </span>
             <span class="chapter-group-name">Chương {{ group.chapter }}</span>
             <span class="chapter-group-caret"><i class="fa-solid fa-chevron-down"></i></span>
@@ -229,7 +229,7 @@
             {% for c in group.entries %}
               <a href="{% url 'reader:chapter_read' manga.id c.id %}" class="chapter-entry-row {% if c.id in read_chapter_ids %}is-read{% endif %}" data-chapter-id="{{ c.id }}">
                 <span class="chapter-entry-eye">
-                  {% if c.id in read_chapter_ids %}<i class="fa-solid fa-eye"></i>{% else %}<i class="fa-solid fa-eye-slash"></i>{% endif %}
+                  {% if c.id in read_chapter_ids %}<i class="fa-solid fa-eye"></i>{% else %}<i class="fa-regular fa-eye chapter-eye-unread"></i>{% endif %}
                 </span>
                 <span class="chapter-entry-flag fi fi-{{ c.flag }}" title="{{ c.language }}"></span>
                 <span class="chapter-entry-main">
