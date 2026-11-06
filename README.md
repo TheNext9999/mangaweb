@@ -19,7 +19,7 @@ Screenshots
 </p>
 
 >Giao diện được tổng hợp và lấy ý tưởng từ:
-> - Dự án [TruyenDex](https://github.com/zennomi/truyendex) của bác [Zennomi]([https://www.facebook.com/search/top?q=zennomi](https://www.facebook.com/Zennomi))
+> - Dự án [TruyenDex](https://github.com/zennomi/truyendex) của bác [Zennomi](https://www.facebook.com/Zennomi)
 > - [MangaDex](https://mangadex.org/)
 > - [Lidex](https://wibubros.id.vn/) của fanpage [Wibu Bros Vietnam](https://www.facebook.com/wibubros)
 
